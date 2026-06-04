@@ -520,7 +520,8 @@ function answerQuiz(ci,btn){
     if(bi===ci && !correct) b.classList.add("wrong");
   });
   const ex=document.getElementById("quizExplain");
-  ex.innerHTML=`<div class="explain ${correct?'':'bad'}"><b>${correct?'Correct ✓':'Not quite ✗'}</b> — ${q.why}</div>`;
+  ex.innerHTML=`<div class="explain ${correct?'':'bad'}"><b>${correct?'Correct ✓':'Not quite ✗'}</b> — ${q.why}</div>
+    <div style="text-align:right; margin-top:8px"><button class="btn small" onclick="reportQuestion('${key}',${idx})">🚩 Report question</button></div>`;
   document.getElementById("quizScore").textContent=`${cur.score} ✓`;
   document.getElementById("nextBtn").classList.remove("hidden");
   document.getElementById("nextBtn").textContent = (cur.i>=cur.list.length-1)?"See results ›":"Next ›";
@@ -783,6 +784,7 @@ function refreshMissed(){
         <summary>${q.q}<div class="muted" style="font-size:12px; font-weight:400; margin-top:4px">Missed ${st.wrong}×${st.seen?` · seen ${st.seen}×`:""} — tap to see the answer</div></summary>
         <div style="margin-top:12px">${choices}</div>
         <div class="explain"><b>Why:</b> ${q.why}</div>
+        <div class="row" style="margin-top:10px; justify-content:flex-end"><button class="btn small" onclick="reportQuestion('${key}',${idx})">🚩 Report question</button></div>
       </details>`;
     });
   });
@@ -791,6 +793,46 @@ function refreshMissed(){
 function practiceMissed(key){
   cur.section=key;
   startQuiz(true); // reuses the section review-quiz; returns to this section's menu on exit
+}
+/* ---- Question reporting -------------------------------------------------
+   Any user can flag a question whose answer looks wrong or needs clarifying.
+   The report is emailed to the maintainer via Web3Forms (https://web3forms.com)
+   — a free form-to-email service, so it works on static GitHub Pages with no
+   server. Paste your own access key below (web3forms.com -> enter your email
+   -> they email you a key). Until then, reporting shows a friendly notice. */
+const REPORT_ACCESS_KEY = "01a1dfb7-f5b8-4629-8bb1-2276450dcc13";  // Web3Forms key — emails reports to the maintainer
+
+function reportQuestion(key,idx){
+  const q=QUESTION_BANK[key]?.questions[idx];
+  if(!q) return;
+  if(!REPORT_ACCESS_KEY || REPORT_ACCESS_KEY.startsWith("YOUR-")){
+    toast("Reporting isn't set up yet");
+    return;
+  }
+  const reason=prompt("Report this question to the maintainer.\nWhat's wrong — incorrect answer, needs clarification, typo?","");
+  if(reason===null) return;                       // cancelled
+  if(!reason.trim()){ toast("Add a short note so it can be fixed"); return; }
+  const u=(typeof Sync!=="undefined" && Sync.user) || null;
+  const sectionTitle=QUESTION_BANK[key]?.title || key;
+  toast("Sending report…");
+  fetch("https://api.web3forms.com/submit",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "Accept":"application/json" },
+    body:JSON.stringify({
+      access_key:REPORT_ACCESS_KEY,
+      subject:"CDL Study — reported question ("+sectionTitle+")",
+      from_name:"CDL Study app",
+      section:sectionTitle,
+      question_number:idx,
+      question:q.q,
+      correct_answer:q.choices[q.answer],
+      issue:reason.trim(),
+      reported_by:u ? (u.email||u.displayName||u.uid) : "(not signed in)"
+    })
+  }).then(r=>r.json())
+    .then(d=>{ if(d && d.success) toast("Thanks — report sent ✓");
+               else { console.warn("report failed",d); toast("Couldn't send report — try again"); } })
+    .catch(e=>{ console.warn("report error",e); toast("Couldn't send report — check connection"); });
 }
 
 /* ============================================================

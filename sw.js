@@ -1,5 +1,5 @@
 /* Simple offline cache for the CDL Study app */
-const CACHE = "cdl-study-v5";
+const CACHE = "cdl-study-v6";
 const ASSETS = ["./", "./index.html", "./questions.js", "./manifest.json", "./icon.svg",
   "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
