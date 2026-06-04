@@ -86,6 +86,11 @@
   .choice.wrong{border-color:var(--red); background:rgba(239,68,68,.12)}
   .choice.wrong .key{background:var(--red); color:#fff; border-color:transparent}
   .choice:disabled{cursor:default; opacity:1}
+  .choice.sel{border-color:var(--accent); background:rgba(52,211,153,.12)}
+  .choice.sel .key{background:var(--accent); color:#04150e; border-color:transparent}
+  .verdict{font-size:20px; font-weight:800}
+  .subscore{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line)}
+  .subscore:last-child{border-bottom:none}
   .explain{
     border-left:3px solid var(--green); background:var(--panel); padding:12px 14px;
     border-radius:8px; margin:6px 0 16px; font-size:14px;
@@ -149,6 +154,15 @@
       </div>
       <div class="bar"><i id="overallBar"></i></div>
     </div>
+    <div class="card section-card" onclick="startExam()" style="border-color:var(--green)">
+      <div class="row">
+        <div>
+          <h3 style="margin:0">📋 Full Practice Exam</h3>
+          <div class="muted" style="font-size:13px">General · Air Brakes · Passenger, back-to-back — answers shown at the end, graded on the 80% pass line.</div>
+        </div>
+        <span class="pill" style="color:var(--green); border-color:var(--green); white-space:nowrap">Start ›</span>
+      </div>
+    </div>
     <div id="sections"></div>
     <p class="muted" style="font-size:12px; text-align:center; margin-top:18px">
       Study material based on the AAMVA/FMCSA model CDL manual. Always confirm details with your state's official CDL handbook.
@@ -182,6 +196,27 @@
     <div id="quizChoices"></div>
     <div id="quizExplain"></div>
     <button class="btn primary block hidden" id="nextBtn" onclick="nextQuiz()">Next ›</button>
+    <div id="examControls" class="grid-btns hidden" style="grid-template-columns:1fr 1fr; margin-top:4px">
+      <button class="btn" id="examPrev" onclick="examPrevRouter()">‹ Prev</button>
+      <button class="btn primary" id="examNext" onclick="examNextRouter()">Next ›</button>
+    </div>
+  </section>
+
+  <!-- EXAM RESULT -->
+  <section id="view-examresult" class="hidden">
+    <div class="card" style="text-align:center; padding:24px">
+      <div id="examResVerdict"></div>
+      <div class="result-big" id="examResPct" style="margin-top:8px">0%</div>
+      <div class="muted" id="examResLine">—</div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Subtest breakdown</h3>
+      <div id="examResBreakdown"></div>
+      <p class="muted" style="font-size:12px; margin-bottom:0">Real CDL written tests are scored separately — you must get 80% on each to pass.</p>
+    </div>
+    <button class="btn primary block" style="margin:8px 0" onclick="reviewExam()">🔍 Review answers</button>
+    <button class="btn block" style="margin:8px 0" onclick="startExam()">🔄 Retake exam</button>
+    <button class="btn ghost block" style="margin:8px 0" onclick="go('home')">Back to home</button>
   </section>
 
   <!-- QUIZ RESULT -->
@@ -245,6 +280,7 @@
 <!-- BOTTOM NAV -->
 <nav class="nav-bottom">
   <button id="nav-home" class="active" onclick="go('home')"><span class="ic">🏠</span>Home</button>
+  <button id="nav-exam" onclick="startExam()"><span class="ic">📋</span>Exam</button>
   <button id="nav-stats" onclick="go('stats')"><span class="ic">📊</span>Progress</button>
 </nav>
 
@@ -349,10 +385,12 @@ function overall(){
 /* ============================================================
    NAVIGATION
    ============================================================ */
-const VIEWS=["home","section","quiz","result","flash","stats"];
+const VIEWS=["home","section","quiz","result","flash","stats","examresult"];
 function go(view){
   VIEWS.forEach(v=>document.getElementById("view-"+v).classList.toggle("hidden", v!==view));
-  document.getElementById("nav-home").classList.toggle("active", view==="home"||view==="section"||view==="quiz"||view==="result"||view==="flash");
+  const examActive = !!cur.exam && (view==="quiz"||view==="examresult");
+  document.getElementById("nav-home").classList.toggle("active", !examActive && (view==="home"||view==="section"||view==="quiz"||view==="result"||view==="flash"));
+  document.getElementById("nav-exam").classList.toggle("active", examActive);
   document.getElementById("nav-stats").classList.toggle("active", view==="stats");
   window.scrollTo(0,0);
   if(view==="home") refreshHome();
@@ -419,6 +457,8 @@ function startQuiz(reviewMode){
   }
   indices=shuffle(indices);
   cur.mode="quiz"; cur.reviewMode=reviewMode; cur.list=indices; cur.i=0; cur.score=0; cur.answered=false;
+  cur.exam=false; cur.examReview=false;
+  document.getElementById("examControls").classList.add("hidden");
   go("quiz"); renderQuiz();
 }
 function renderQuiz(){
@@ -469,7 +509,11 @@ function nextQuiz(){
   if(cur.i>=cur.list.length-1){ showResult(); return; }
   cur.i++; renderQuiz(); window.scrollTo(0,0);
 }
-function confirmExit(){ if(confirm("Exit this quiz? Your answered questions are already saved.")) go("section"); }
+function confirmExit(){
+  if(cur.examReview){ document.getElementById("examControls").classList.add("hidden"); go("examresult"); return; }
+  if(cur.exam){ exitExam(); return; }
+  if(confirm("Exit this quiz? Your answered questions are already saved.")) go("section");
+}
 function showResult(){
   const pct=Math.round(cur.score/cur.list.length*100);
   go("result");
@@ -489,7 +533,7 @@ function showResult(){
    FLASHCARDS
    ============================================================ */
 function startFlash(){
-  cur.mode="flash"; cur.list=QUESTION_BANK[cur.section].questions.map((_,i)=>i); cur.i=0; cur.flashFlipped=false;
+  cur.mode="flash"; cur.exam=false; cur.examReview=false; cur.list=QUESTION_BANK[cur.section].questions.map((_,i)=>i); cur.i=0; cur.flashFlipped=false;
   go("flash"); renderFlash();
 }
 function renderFlash(){
@@ -510,6 +554,156 @@ function flipFlash(){
 }
 function nextFlash(){ if(cur.i<cur.list.length-1){cur.i++; renderFlash();} else toast("That's the last card"); }
 function prevFlash(){ if(cur.i>0){cur.i--; renderFlash();} }
+
+/* ============================================================
+   FULL PRACTICE EXAM
+   Mimics sitting the real written tests back-to-back (General
+   Knowledge, Air Brakes, Passenger). Answers are NOT revealed
+   until you submit; each subtest is graded on the 80% CDL
+   passing standard. You can navigate back/forward and change
+   answers before submitting, just like the DMV kiosk.
+   ============================================================ */
+const EXAM_SPEC = [
+  { key:"general",   label:"General Knowledge", count:50, pass:0.8 },
+  { key:"airbrakes", label:"Air Brakes",        count:25, pass:0.8 },
+  { key:"passenger", label:"Passenger (P)",     count:20, pass:0.8 },
+];
+function shuffleArr(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function examPlan(){
+  return EXAM_SPEC
+    .filter(s=>QUESTION_BANK[s.key])
+    .map(s=>({...s, count:Math.min(s.count, QUESTION_BANK[s.key].questions.length)}));
+}
+function startExam(){
+  const plan=examPlan();
+  const items=[];
+  plan.forEach(s=>{
+    shuffleArr(QUESTION_BANK[s.key].questions.map((_,i)=>i)).slice(0,s.count)
+      .forEach(idx=>items.push({sec:s.key, idx}));
+  });
+  cur.exam=true; cur.examReview=false; cur.mode="exam";
+  cur.plan=plan; cur.list=items; cur.answers=new Array(items.length).fill(null);
+  cur.i=0; cur.section=null;
+  document.getElementById("nextBtn").classList.add("hidden");
+  document.getElementById("examControls").classList.remove("hidden");
+  go("quiz"); renderExam();
+}
+function examItemSpec(it){ return cur.plan.find(s=>s.key===it.sec); }
+function renderExam(){
+  const it=cur.list[cur.i], q=QUESTION_BANK[it.sec].questions[it.idx], spec=examItemSpec(it);
+  document.getElementById("quizCounter").textContent=`Question ${cur.i+1} / ${cur.list.length}`;
+  document.getElementById("quizScore").textContent=spec.label;
+  document.getElementById("quizBar").style.width=(cur.i/cur.list.length*100)+"%";
+  document.getElementById("quizQ").textContent=q.q;
+  document.getElementById("quizExplain").innerHTML="";
+  const keys=["A","B","C","D"];
+  const cc=document.getElementById("quizChoices"); cc.innerHTML="";
+  q.choices.forEach((c,ci)=>{
+    const b=document.createElement("button");
+    b.className="choice"+(cur.answers[cur.i]===ci?" sel":"");
+    b.innerHTML=`<span class="key">${keys[ci]}</span><span>${c}</span>`;
+    b.onclick=()=>selectExam(ci);
+    cc.appendChild(b);
+  });
+  const prev=document.getElementById("examPrev");
+  prev.disabled=cur.i===0; prev.style.opacity=cur.i===0?.5:1;
+  document.getElementById("examNext").textContent=(cur.i>=cur.list.length-1)?"Submit exam ›":"Next ›";
+}
+function selectExam(ci){
+  cur.answers[cur.i]=ci;
+  document.querySelectorAll("#quizChoices .choice").forEach((b,bi)=>b.classList.toggle("sel",bi===ci));
+}
+function examNextBtn(){
+  if(cur.i>=cur.list.length-1){ submitExam(); return; }
+  cur.i++; renderExam(); window.scrollTo(0,0);
+}
+function examPrevBtn(){ if(cur.i>0){ cur.i--; renderExam(); window.scrollTo(0,0); } }
+function exitExam(){
+  if(confirm("Leave the exam? Your in-progress answers won't be saved.")){
+    cur.exam=false;
+    document.getElementById("examControls").classList.add("hidden");
+    go("home");
+  }
+}
+function submitExam(){
+  const unanswered=cur.answers.filter(a=>a===null).length;
+  if(unanswered>0 && !confirm(`You have ${unanswered} unanswered question${unanswered>1?"s":""}. Submit anyway? Unanswered questions count as wrong.`)) return;
+  const bySec={};
+  cur.list.forEach((it,i)=>{
+    const q=QUESTION_BANK[it.sec].questions[it.idx];
+    const correct = cur.answers[i]===q.answer;
+    (bySec[it.sec]=bySec[it.sec]||{correct:0,total:0}).total++;
+    if(correct) bySec[it.sec].correct++;
+    const st=qStat(it.sec,it.idx); st.seen++;
+    progress.missed[it.sec]=progress.missed[it.sec]||[];
+    if(correct){ st.correct++; progress.missed[it.sec]=progress.missed[it.sec].filter(x=>x!==it.idx); }
+    else { st.wrong++; if(!progress.missed[it.sec].includes(it.idx)) progress.missed[it.sec].push(it.idx); }
+  });
+  saveProgress();
+  cur.examResult=bySec;
+  document.getElementById("examControls").classList.add("hidden");
+  renderExamResult();
+  go("examresult");
+}
+function renderExamResult(){
+  const bySec=cur.examResult; let totC=0,totT=0,allPass=true;
+  const rows=cur.plan.map(s=>{
+    const r=bySec[s.key]||{correct:0,total:0};
+    totC+=r.correct; totT+=r.total;
+    const pct=r.total?Math.round(r.correct/r.total*100):0;
+    const pass=r.total ? (r.correct/r.total)>=s.pass : false;
+    if(!pass) allPass=false;
+    const col=pass?"var(--green)":"var(--amber)";
+    return `<div class="subscore">
+      <div><b>${s.label}</b><div class="muted" style="font-size:13px">${r.correct} / ${r.total} correct</div></div>
+      <div style="text-align:right">
+        <div class="pct" style="font-size:18px">${pct}%</div>
+        <span class="pill" style="color:${col};border-color:${col}">${pass?"PASS":"Below 80%"}</span>
+      </div></div>`;
+  }).join("");
+  document.getElementById("examResVerdict").innerHTML = allPass
+    ? `<div class="verdict" style="color:var(--green)">🎉 You passed every subtest</div>`
+    : `<div class="verdict" style="color:var(--amber)">Not yet — 80% needed on each</div>`;
+  document.getElementById("examResPct").textContent=(totT?Math.round(totC/totT*100):0)+"%";
+  document.getElementById("examResLine").textContent=`${totC} of ${totT} correct overall`;
+  document.getElementById("examResBreakdown").innerHTML=rows;
+}
+function reviewExam(){
+  cur.examReview=true; cur.i=0;
+  document.getElementById("examControls").classList.remove("hidden");
+  go("quiz"); renderExamReview();
+}
+function renderExamReview(){
+  const it=cur.list[cur.i], q=QUESTION_BANK[it.sec].questions[it.idx], spec=examItemSpec(it);
+  const sel=cur.answers[cur.i], correct=sel===q.answer;
+  document.getElementById("quizCounter").textContent=`Review ${cur.i+1} / ${cur.list.length}`;
+  document.getElementById("quizScore").textContent=spec.label;
+  document.getElementById("quizBar").style.width=((cur.i+1)/cur.list.length*100)+"%";
+  document.getElementById("quizQ").textContent=q.q;
+  const keys=["A","B","C","D"];
+  const cc=document.getElementById("quizChoices"); cc.innerHTML="";
+  q.choices.forEach((c,ci)=>{
+    const b=document.createElement("button");
+    let cls="choice";
+    if(ci===q.answer) cls+=" correct";
+    if(ci===sel && sel!==q.answer) cls+=" wrong";
+    b.className=cls; b.disabled=true;
+    b.innerHTML=`<span class="key">${keys[ci]}</span><span>${c}</span>`;
+    cc.appendChild(b);
+  });
+  const head = sel===null ? "You skipped this question." : (correct?"You answered correctly.":"Your answer was incorrect.");
+  document.getElementById("quizExplain").innerHTML=`<div class="explain ${correct?"":"bad"}"><b>${head}</b> — ${q.why}</div>`;
+  const prev=document.getElementById("examPrev");
+  prev.disabled=cur.i===0; prev.style.opacity=cur.i===0?.5:1;
+  document.getElementById("examNext").textContent=(cur.i>=cur.list.length-1)?"Back to results ›":"Next ›";
+}
+function examNextRouter(){ cur.examReview ? examReviewNext() : examNextBtn(); }
+function examPrevRouter(){ cur.examReview ? examReviewPrev() : examPrevBtn(); }
+function examReviewNext(){
+  if(cur.i>=cur.list.length-1){ document.getElementById("examControls").classList.add("hidden"); go("examresult"); }
+  else { cur.i++; renderExamReview(); window.scrollTo(0,0); }
+}
+function examReviewPrev(){ if(cur.i>0){ cur.i--; renderExamReview(); window.scrollTo(0,0); } }
 
 /* ============================================================
    STATS
