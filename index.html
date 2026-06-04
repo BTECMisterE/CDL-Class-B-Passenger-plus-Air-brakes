@@ -176,6 +176,15 @@
         <span class="pill" style="color:var(--green); border-color:var(--green); white-space:nowrap">Start ›</span>
       </div>
     </div>
+    <div class="card section-card" onclick="startAdaptive(null)" style="border-color:var(--accent)">
+      <div class="row">
+        <div>
+          <h3 style="margin:0">🧠 Adaptive Practice</h3>
+          <div class="muted" style="font-size:13px">Drills the questions you miss most, pulled from every section and weighted by your history.</div>
+        </div>
+        <span class="pill" style="color:var(--accent); border-color:var(--accent); white-space:nowrap">Start ›</span>
+      </div>
+    </div>
     <div id="sections"></div>
     <p class="muted" style="font-size:12px; text-align:center; margin-top:18px">
       Study material based on the AAMVA/FMCSA model CDL manual. Always confirm details with your state's official CDL handbook.
@@ -195,6 +204,7 @@
     <button class="btn primary block" style="margin:8px 0" onclick="startQuiz(false)">📝 Take a Quiz</button>
     <button class="btn block" style="margin:8px 0" onclick="startFlash()">🃏 Flashcards</button>
     <button class="btn block" style="margin:8px 0" id="reviewBtn" onclick="startQuiz(true)">🔁 Review Missed</button>
+    <button class="btn block" style="margin:8px 0" onclick="startAdaptive(cur.section)">🧠 Adaptive Practice</button>
   </section>
 
   <!-- QUIZ -->
@@ -241,8 +251,8 @@
       <div id="resBadge" style="margin-top:10px"></div>
     </div>
     <button class="btn primary block" style="margin:8px 0" id="resReviewBtn" onclick="startQuiz(true)">🔁 Review Missed</button>
-    <button class="btn block" style="margin:8px 0" onclick="startQuiz(false)">🔄 Retake Quiz</button>
-    <button class="btn ghost block" style="margin:8px 0" onclick="go('section')">Back to section</button>
+    <button class="btn block" style="margin:8px 0" id="resRetakeBtn" onclick="startQuiz(false)">🔄 Retake Quiz</button>
+    <button class="btn ghost block" style="margin:8px 0" id="resBackBtn" onclick="go('section')">Back to section</button>
   </section>
 
   <!-- FLASHCARDS -->
@@ -472,7 +482,45 @@ function refreshSection(){
    QUIZ
    ============================================================ */
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor((cur._seed=(cur._seed*9301+49297)%233280)/233280*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+/* ---------- adaptive practice ---------- *
+   Weights every question by your history so the ones you've missed before
+   keep coming back (and more often the more you've missed them). */
+function adaptiveWeight(st){
+  if(!st || !st.seen) return 2;          // never seen — mix in some fresh questions
+  if(st.wrong>0) return 4 + 2*st.wrong;  // missed before — prioritize, scaled by miss count
+  return 1;                              // seen and never missed — occasional refresh
+}
+function buildAdaptiveList(scope){
+  const keys = scope ? [scope] : Object.keys(QUESTION_BANK);
+  const pool=[];
+  keys.forEach(key=>QUESTION_BANK[key].questions.forEach((_,i)=>{
+    pool.push({sec:key, idx:i, w:adaptiveWeight(progress.stats[key]?.[i])});
+  }));
+  const N=Math.min(20, pool.length), picked=[];
+  while(picked.length<N && pool.length){
+    let total=0; pool.forEach(c=>total+=c.w);
+    let r=Math.random()*total, j=0;
+    while(j<pool.length-1 && (r-=pool[j].w)>0) j++;
+    picked.push(pool.splice(j,1)[0]);
+  }
+  picked.sort((a,b)=>b.w-a.w);           // hardest questions first
+  return picked;
+}
+function curKey(){ return cur.adaptive ? cur.secList[cur.i] : cur.section; }
+function startAdaptive(scope){
+  scope = scope || null;
+  const items=buildAdaptiveList(scope);
+  if(!items.length){ toast("No questions available yet."); return; }
+  cur.mode="quiz"; cur.adaptive=true; cur.adaptiveScope=scope; cur.reviewMode=false;
+  cur.exam=false; cur.examReview=false; cur.section=scope;
+  cur.list=items.map(it=>it.idx); cur.secList=items.map(it=>it.sec);
+  cur.i=0; cur.score=0; cur.answered=false;
+  document.getElementById("examControls").classList.add("hidden");
+  go("quiz"); renderQuiz();
+}
 function startQuiz(reviewMode){
+  cur.adaptive=false;
   const key=cur.section;
   cur._seed = (progress.updated*7+key.length+ (reviewMode?13:0))%233280 + 1;
   let indices;
@@ -489,9 +537,9 @@ function startQuiz(reviewMode){
   go("quiz"); renderQuiz();
 }
 function renderQuiz(){
-  const key=cur.section, idx=cur.list[cur.i], q=QUESTION_BANK[key].questions[idx];
+  const key=curKey(), idx=cur.list[cur.i], q=QUESTION_BANK[key].questions[idx];
   cur.answered=false;
-  document.getElementById("quizCounter").textContent=`${cur.i+1} / ${cur.list.length}`+(cur.reviewMode?" · review":"");
+  document.getElementById("quizCounter").textContent=`${cur.i+1} / ${cur.list.length}`+(cur.adaptive?" · adaptive":cur.reviewMode?" · review":"");
   document.getElementById("quizScore").textContent=`${cur.score} ✓`;
   document.getElementById("quizBar").style.width=((cur.i)/cur.list.length*100)+"%";
   document.getElementById("quizQ").textContent=q.q;
@@ -510,7 +558,7 @@ function renderQuiz(){
 function answerQuiz(ci,btn){
   if(cur.answered) return;
   cur.answered=true;
-  const key=cur.section, idx=cur.list[cur.i], q=QUESTION_BANK[key].questions[idx];
+  const key=curKey(), idx=cur.list[cur.i], q=QUESTION_BANK[key].questions[idx];
   const correct = ci===q.answer;
   const st=qStat(key,idx); st.seen++;
   if(correct){ st.correct++; cur.score++; }
@@ -541,7 +589,7 @@ function nextQuiz(){
 function confirmExit(){
   if(cur.examReview){ document.getElementById("examControls").classList.add("hidden"); go("examresult"); return; }
   if(cur.exam){ exitExam(); return; }
-  if(confirm("Exit this quiz? Your answered questions are already saved.")) go("section");
+  if(confirm("Exit this quiz? Your answered questions are already saved.")) go(cur.adaptive && !cur.adaptiveScope ? "home" : "section");
 }
 function showResult(){
   const pct=Math.round(cur.score/cur.list.length*100);
@@ -552,17 +600,30 @@ function showResult(){
   if(pct>=80) badge=`<span class="pill" style="color:var(--green);border-color:var(--green)">✓ Passing range (80%+)</span>`;
   else badge=`<span class="pill" style="color:var(--amber);border-color:var(--amber)">Keep practicing — aim for 80%</span>`;
   document.getElementById("resBadge").innerHTML=badge;
-  const missed=(progress.missed[cur.section]||[]).length;
   const rb=document.getElementById("resReviewBtn");
-  rb.style.display = missed? "flex":"none";
-  rb.textContent=`🔁 Review Missed (${missed})`;
+  const retake=document.getElementById("resRetakeBtn");
+  const back=document.getElementById("resBackBtn");
+  if(cur.adaptive){
+    rb.style.display="flex"; rb.textContent="🧠 Practice again (adaptive)";
+    rb.onclick=()=>startAdaptive(cur.adaptiveScope);
+    retake.style.display="none";
+    back.textContent = cur.adaptiveScope ? "Back to section" : "Back to home";
+    back.onclick=()=>go(cur.adaptiveScope ? "section" : "home");
+  }else{
+    const missed=(progress.missed[cur.section]||[]).length;
+    rb.style.display = missed? "flex":"none";
+    rb.textContent=`🔁 Review Missed (${missed})`;
+    rb.onclick=()=>startQuiz(true);
+    retake.style.display="flex"; retake.onclick=()=>startQuiz(false);
+    back.textContent="Back to section"; back.onclick=()=>go("section");
+  }
 }
 
 /* ============================================================
    FLASHCARDS
    ============================================================ */
 function startFlash(){
-  cur.mode="flash"; cur.exam=false; cur.examReview=false; cur.list=QUESTION_BANK[cur.section].questions.map((_,i)=>i); cur.i=0; cur.flashFlipped=false;
+  cur.mode="flash"; cur.adaptive=false; cur.exam=false; cur.examReview=false; cur.list=QUESTION_BANK[cur.section].questions.map((_,i)=>i); cur.i=0; cur.flashFlipped=false;
   go("flash"); renderFlash();
 }
 function renderFlash(){
@@ -610,7 +671,7 @@ function startExam(){
     shuffleArr(QUESTION_BANK[s.key].questions.map((_,i)=>i)).slice(0,s.count)
       .forEach(idx=>items.push({sec:s.key, idx}));
   });
-  cur.exam=true; cur.examReview=false; cur.mode="exam";
+  cur.exam=true; cur.adaptive=false; cur.examReview=false; cur.mode="exam";
   cur.plan=plan; cur.list=items; cur.answers=new Array(items.length).fill(null);
   cur.i=0; cur.section=null;
   document.getElementById("nextBtn").classList.add("hidden");
