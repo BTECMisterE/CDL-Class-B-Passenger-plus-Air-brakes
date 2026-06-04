@@ -219,11 +219,11 @@
     <div id="quizChoices"></div>
     <div id="quizExplain"></div>
     <button class="btn primary block hidden" id="nextBtn" onclick="nextQuiz()">Next ›</button>
-    <div id="reportRow"></div>
     <div id="examControls" class="grid-btns hidden" style="grid-template-columns:1fr 1fr; margin-top:4px">
       <button class="btn" id="examPrev" onclick="examPrevRouter()">‹ Prev</button>
       <button class="btn primary" id="examNext" onclick="examNextRouter()">Next ›</button>
     </div>
+    <div id="reportRow"></div>
   </section>
 
   <!-- EXAM RESULT -->
@@ -686,6 +686,7 @@ function renderExam(){
   document.getElementById("quizBar").style.width=(cur.i/cur.list.length*100)+"%";
   document.getElementById("quizQ").textContent=q.q;
   document.getElementById("quizExplain").innerHTML="";
+  document.getElementById("reportRow").innerHTML="";
   const keys=["A","B","C","D"];
   const cc=document.getElementById("quizChoices"); cc.innerHTML="";
   q.choices.forEach((c,ci)=>{
@@ -783,6 +784,7 @@ function renderExamReview(){
   });
   const head = sel===null ? "You skipped this question." : (correct?"You answered correctly.":"Your answer was incorrect.");
   document.getElementById("quizExplain").innerHTML=`<div class="explain ${correct?"":"bad"}"><b>${head}</b> — ${q.why}</div>`;
+  document.getElementById("reportRow").innerHTML=`<div class="report-row"><button class="btn report" onclick="reportQuestion('${it.sec}',${it.idx})">🚩 Report a problem with this question</button></div>`;
   const prev=document.getElementById("examPrev");
   prev.disabled=cur.i===0; prev.style.opacity=cur.i===0?.5:1;
   document.getElementById("examNext").textContent=(cur.i>=cur.list.length-1)?"Back to results ›":"Next ›";
