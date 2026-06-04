@@ -1,6 +1,7 @@
 /* Simple offline cache for the CDL Study app */
-const CACHE = "cdl-study-v4";
-const ASSETS = ["./", "./index.html", "./questions.js", "./manifest.json", "./icon.svg"];
+const CACHE = "cdl-study-v5";
+const ASSETS = ["./", "./index.html", "./questions.js", "./manifest.json", "./icon.svg",
+  "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
