@@ -105,6 +105,9 @@
     border-radius:8px; margin:6px 0 16px; font-size:14px;
   }
   .explain.bad{border-left-color:var(--amber)}
+  .pt-done{margin-bottom:14px}
+  .pt-done-row{font-size:13px; color:var(--muted); padding:2px 0}
+  .pt-done-row span{color:var(--text)}
 
   /* Flashcard */
   .flash{
@@ -183,6 +186,15 @@
           <div class="muted" style="font-size:13px">Drills the questions you miss most, pulled from every section and weighted by your history.</div>
         </div>
         <span class="pill" style="color:var(--accent); border-color:var(--accent); white-space:nowrap">Start ›</span>
+      </div>
+    </div>
+    <div class="card section-card" onclick="startPretrip()" style="border-color:var(--amber)">
+      <div class="row">
+        <div>
+          <h3 style="margin:0">🚌 Pre-Trip Walkthrough</h3>
+          <div class="muted" style="font-size:13px">Learn the inspection in order — pick the next step each time, one step at a time.</div>
+        </div>
+        <span class="pill" style="color:var(--amber); border-color:var(--amber); white-space:nowrap">Start ›</span>
       </div>
     </div>
     <div id="sections"></div>
@@ -309,6 +321,22 @@
     <div id="missedList"></div>
   </section>
 
+  <!-- PRE-TRIP INSPECTION WALKTHROUGH -->
+  <section id="view-pretrip" class="hidden">
+    <div class="progressline">
+      <button class="btn ghost small" onclick="go('home')">✕ Exit</button>
+      <span id="ptCounter"></span>
+      <span class="pill" id="ptScore">0 ✓</span>
+    </div>
+    <div class="bar" style="margin-bottom:14px"><i id="ptBar"></i></div>
+    <div id="ptPhaseWrap" style="margin-bottom:12px"><span class="pill" id="ptPhase"></span></div>
+    <div id="ptDone" class="pt-done"></div>
+    <div class="qtext" id="ptQ"></div>
+    <div id="ptChoices"></div>
+    <div id="ptExplain"></div>
+    <button class="btn primary block hidden" id="ptNext" onclick="ptNext()">Next step ›</button>
+  </section>
+
 </div>
 
 <!-- BOTTOM NAV -->
@@ -420,11 +448,11 @@ function overall(){
 /* ============================================================
    NAVIGATION
    ============================================================ */
-const VIEWS=["home","section","quiz","result","flash","stats","examresult","missed"];
+const VIEWS=["home","section","quiz","result","flash","stats","examresult","missed","pretrip"];
 function go(view){
   VIEWS.forEach(v=>document.getElementById("view-"+v).classList.toggle("hidden", v!==view));
   const examActive = !!cur.exam && (view==="quiz"||view==="examresult");
-  document.getElementById("nav-home").classList.toggle("active", !examActive && (view==="home"||view==="section"||view==="quiz"||view==="result"||view==="flash"));
+  document.getElementById("nav-home").classList.toggle("active", !examActive && (view==="home"||view==="section"||view==="quiz"||view==="result"||view==="flash"||view==="pretrip"));
   document.getElementById("nav-exam").classList.toggle("active", examActive);
   document.getElementById("nav-stats").classList.toggle("active", view==="stats");
   document.getElementById("nav-missed").classList.toggle("active", view==="missed");
@@ -617,6 +645,116 @@ function showResult(){
     retake.style.display="flex"; retake.onclick=()=>startQuiz(false);
     back.textContent="Back to section"; back.onclick=()=>go("section");
   }
+}
+
+/* ============================================================
+   PRE-TRIP INSPECTION WALKTHROUGH
+   An ordered "what's the next step?" drill. The SEQUENCE is fixed
+   (that's what you're learning); only the 4 choices per step are
+   shuffled. Based on the AAMVA/FMCSA Seven-Step Inspection Method +
+   the standard in-cab air brake check. Always confirm the exact
+   order with your state handbook and examiner.
+   ============================================================ */
+const PRETRIP = [
+  {phase:"1 · Vehicle Overview", title:"Review the last vehicle inspection report", detail:"Check whether the previous driver reported any problems, and that anything affecting safety was certified as repaired."},
+  {phase:"1 · Vehicle Overview", title:"Walk up and look the vehicle over", detail:"Note general condition — is it leaning, are there fresh fluid puddles underneath, any damage or hazards around it?"},
+  {phase:"2 · Engine Compartment (engine off)", title:"Check the engine oil level", detail:"Pull the dipstick — oil should read within the safe operating range."},
+  {phase:"2 · Engine Compartment (engine off)", title:"Check the coolant level", detail:"Coolant in the reservoir/radiator is at the proper level; hoses are not cracked or leaking."},
+  {phase:"2 · Engine Compartment (engine off)", title:"Check the power steering fluid", detail:"Level is adequate and the power-steering hose is sound."},
+  {phase:"2 · Engine Compartment (engine off)", title:"Check belts and hoses", detail:"Look for cracks, fraying, and proper tension (roughly ¾-inch play on a belt)."},
+  {phase:"2 · Engine Compartment (engine off)", title:"Check for leaks and worn wiring", detail:"Scan for drips, puddles, and cracked or chafed insulation before closing up."},
+  {phase:"3 · Start Engine & Inside the Cab", title:"Get in, start the engine, and listen", detail:"Start up and listen for unusual noises while you watch the gauges come alive."},
+  {phase:"3 · Start Engine & Inside the Cab", title:"Check the oil pressure gauge", detail:"Oil pressure should rise to the normal range within seconds of starting."},
+  {phase:"3 · Start Engine & Inside the Cab", title:"Check temperature, voltage, and air pressure gauges", detail:"Readings should climb to and hold in their normal operating ranges."},
+  {phase:"3 · Start Engine & Inside the Cab", title:"Confirm the warning lights go out", detail:"Oil, coolant, ABS, and low-air warning lights should turn off once everything is up to pressure/charge."},
+  {phase:"3 · Start Engine & Inside the Cab", title:"Check mirrors and windshield", detail:"Clean and properly adjusted, no illegal stickers, no damage that blocks your view."},
+  {phase:"3 · Start Engine & Inside the Cab", title:"Check emergency equipment", detail:"Charged fire extinguisher, spare electrical fuses, and warning triangles/reflectors are present."},
+  {phase:"4 · Turn Off Engine & Check Lights", title:"Shut the engine off and check the exterior lights", detail:"Headlights (low and high beam) and the 4-way flashers all work."},
+  {phase:"5 · Walkaround Inspection", title:"Turn on the right turn signal and begin the walkaround", detail:"Start a full loop of the vehicle, checking each area as you go."},
+  {phase:"5 · Walkaround Inspection", title:"Check the wheels and tires", detail:"Proper inflation and tread, no cuts or bulges, lug nuts tight, no oil/grease on the tires."},
+  {phase:"5 · Walkaround Inspection", title:"Check the suspension", detail:"Springs, hangers, shackles, U-bolts, shock absorbers, and air-ride bags are sound."},
+  {phase:"5 · Walkaround Inspection", title:"Check the brakes", detail:"Brake drums/discs, hoses, and slack adjusters; linings are not worn dangerously thin."},
+  {phase:"5 · Walkaround Inspection", title:"Check lights and reflectors on every side", detail:"All clean, the correct color, and working as you complete the loop."},
+  {phase:"6 · Passenger Items (bus)", title:"Check the emergency exits and entrance door", detail:"Emergency exits open and are unobstructed; the entrance door operates properly."},
+  {phase:"6 · Passenger Items (bus)", title:"Check the passenger area", detail:"Seats are secure, aisles and handrails clear and solid, no loose items that could fly around."},
+  {phase:"7 · Air Brake Check", title:"Build air pressure to the governor cut-out", detail:"Run the engine until the governor cuts out, normally around 120–140 psi."},
+  {phase:"7 · Air Brake Check", title:"Test the static air leakage rate", detail:"Fully charged, engine off, release the service brake: a straight vehicle should lose no more than 2 psi in one minute (3 psi with the brake applied)."},
+  {phase:"7 · Air Brake Check", title:"Test the low-air warning", detail:"With the key on, fan the brakes — the low-air warning must come on before pressure falls below 60 psi."},
+  {phase:"7 · Air Brake Check", title:"Confirm the spring (parking) brakes engage", detail:"Keep fanning: the parking-brake valve should pop out and the spring brakes apply, usually between about 20 and 45 psi."},
+  {phase:"7 · Air Brake Check", title:"Test the parking brake holds", detail:"Buckle up, build pressure back up, set the parking brake, and gently pull forward to confirm it holds."},
+  {phase:"7 · Air Brake Check", title:"Test the service brake", detail:"Roll at about 5 mph, apply the brake firmly — the vehicle should stop straight without pulling or feeling odd."},
+];
+function startPretrip(){
+  cur.pt={i:0, score:0, answered:false, done:[]};
+  go("pretrip"); renderPretrip();
+}
+function renderPtDone(){
+  const el=document.getElementById("ptDone"), done=cur.pt.done;
+  if(!done.length){ el.innerHTML=""; return; }
+  el.innerHTML=done.map((d,n)=>`<div class="pt-done-row">${d.ok?"✓":"✗"} <span>${n+1}. ${d.title}</span></div>`).join("");
+}
+function renderPretrip(){
+  const pt=cur.pt, step=PRETRIP[pt.i];
+  pt.answered=false;
+  document.getElementById("ptCounter").textContent=`Step ${pt.i+1} / ${PRETRIP.length}`;
+  document.getElementById("ptScore").textContent=`${pt.score} ✓`;
+  document.getElementById("ptBar").style.width=(pt.i/PRETRIP.length*100)+"%";
+  document.getElementById("ptPhase").textContent=step.phase;
+  renderPtDone();
+  document.getElementById("ptQ").textContent = pt.i===0
+    ? "You're starting your pre-trip inspection. What do you do FIRST?"
+    : `Done: “${PRETRIP[pt.i-1].title}.” What's the next step?`;
+  document.getElementById("ptExplain").innerHTML="";
+  const nb=document.getElementById("ptNext");
+  nb.classList.add("hidden"); nb.onclick=ptNext;
+  const keys=["A","B","C","D"];
+  const others=PRETRIP.filter((_,idx)=>idx!==pt.i);
+  const opts=shuffleArr([step.title, ...shuffleArr(others).slice(0,3).map(s=>s.title)]);
+  const cc=document.getElementById("ptChoices"); cc.innerHTML="";
+  opts.forEach((t,ci)=>{
+    const b=document.createElement("button");
+    b.className="choice"; b.dataset.title=t;
+    b.innerHTML=`<span class="key">${keys[ci]}</span><span>${t}</span>`;
+    b.onclick=()=>answerPretrip(t,b);
+    cc.appendChild(b);
+  });
+}
+function answerPretrip(title, btn){
+  const pt=cur.pt; if(pt.answered) return; pt.answered=true;
+  const step=PRETRIP[pt.i], correct = title===step.title;
+  document.querySelectorAll("#ptChoices .choice").forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.title===step.title) b.classList.add("correct");
+    else if(b===btn && !correct) b.classList.add("wrong");
+  });
+  if(correct) pt.score++;
+  pt.done.push({title:step.title, ok:correct});
+  document.getElementById("ptScore").textContent=`${pt.score} ✓`;
+  document.getElementById("ptExplain").innerHTML=
+    `<div class="explain ${correct?'':'bad'}"><b>${correct?'Correct ✓':'Not quite — the next step is: '+step.title}</b><br>${step.detail}</div>`;
+  const nb=document.getElementById("ptNext");
+  nb.classList.remove("hidden");
+  nb.textContent=(pt.i>=PRETRIP.length-1)?"See summary ›":"Next step ›";
+}
+function ptNext(){
+  const pt=cur.pt;
+  if(pt.i>=PRETRIP.length-1){ ptFinish(); return; }
+  pt.i++; renderPretrip(); window.scrollTo(0,0);
+}
+function ptFinish(){
+  const pt=cur.pt, pct=Math.round(pt.score/PRETRIP.length*100);
+  document.getElementById("ptCounter").textContent="Complete";
+  document.getElementById("ptPhase").textContent="Pre-trip walkthrough";
+  document.getElementById("ptBar").style.width="100%";
+  document.getElementById("ptDone").innerHTML="";
+  document.getElementById("ptQ").textContent=`Walkthrough complete — ${pt.score} of ${PRETRIP.length} correct (${pct}%).`;
+  document.getElementById("ptChoices").innerHTML="";
+  document.getElementById("ptExplain").innerHTML=
+    `<div class="explain ${pct>=80?'':'bad'}">`+
+    PRETRIP.map((s,n)=>`${pt.done[n] && pt.done[n].ok?'✓':'✗'} ${n+1}. ${s.title}`).join("<br>")+
+    `</div>`;
+  const nb=document.getElementById("ptNext");
+  nb.classList.remove("hidden"); nb.textContent="🔄 Start over"; nb.onclick=startPretrip;
 }
 
 /* ============================================================
