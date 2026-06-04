@@ -234,7 +234,62 @@ const QUESTION_BANK = {
       { q: "The safest speed on a curve is:",
         choices: ["The posted highway limit", "A speed slow enough that you have already braked BEFORE entering the curve", "As fast as traction allows mid-curve", "Whatever feels right"],
         answer: 1,
-        why: "Slow to a safe speed before the curve, because braking in a curve can cause a skid; a posted curve speed is for cars, so go slower in a truck." }
+        why: "Slow to a safe speed before the curve, because braking in a curve can cause a skid; a posted curve speed is for cars, so go slower in a truck." },
+
+      { q: "A first conviction for driving a CMV under the influence, refusing a required drug/alcohol test, or leaving the scene of an accident results in a disqualification of at least:",
+        choices: ["30 days", "60 days", "1 year (3 years if hauling placarded hazardous materials)", "No penalty for a first offense"],
+        answer: 2,
+        why: "Major offenses — DUI, refusing testing, leaving an accident scene, or using a CMV to commit a felony — bring at least a 1-year disqualification; 3 years if you were hauling placarded hazmat." },
+
+      { q: "Committing two 'serious traffic violations' in separate incidents within 3 years disqualifies a CDL holder for:",
+        choices: ["60 days", "1 year", "Lifetime", "There is no penalty"],
+        answer: 0,
+        why: "Two serious traffic violations in a 3-year period = a 60-day disqualification; three in 3 years = 120 days." },
+
+      { q: "Which of these counts as a 'serious traffic violation' for a CDL holder?",
+        choices: ["A parking ticket", "Excessive speeding (15+ mph over the limit), reckless driving, or texting while driving", "A burned-out plate light", "Driving below the speed limit"],
+        answer: 1,
+        why: "Serious violations include speeding 15+ mph over, reckless/erratic driving, following too closely, improper lane changes, and using a hand-held phone or texting in a CMV." },
+
+      { q: "Violating an out-of-service order (driving after an inspector has placed the driver or vehicle out of service) brings a disqualification of at least:",
+        choices: ["A warning only", "180 days for a first offense", "Nothing", "5 days"],
+        answer: 1,
+        why: "Driving in violation of an out-of-service order means at least a 180-day disqualification for a first offense — much longer for repeats." },
+
+      { q: "GVWR (Gross Vehicle Weight Rating) means:",
+        choices: ["The empty weight of the vehicle", "The manufacturer's maximum loaded weight for a single vehicle", "The weight of the cargo only", "The combined weight of a truck and trailer"],
+        answer: 1,
+        why: "GVWR is the manufacturer's maximum loaded weight for a single vehicle. (For a combination it's GCWR.)" },
+
+      { q: "A load with a high center of gravity (heavy cargo stacked high) is dangerous because it:",
+        choices: ["Improves braking", "Makes the vehicle more likely to tip over, especially in curves", "Cannot be tied down", "Lowers fuel use"],
+        answer: 1,
+        why: "A high center of gravity raises rollover risk — keep heavy cargo low and centered." },
+
+      { q: "The recommended seven-step pre-trip inspection method begins with:",
+        choices: ["Starting the engine and driving off", "A vehicle overview — approach, look it over, and review the last driver's report", "Checking the cargo first", "Testing the horn"],
+        answer: 1,
+        why: "Step 1 is the vehicle overview: look it over for leaks/damage and review the previous inspection report." },
+
+      { q: "The minimum vision standard to drive a commercial vehicle is at least:",
+        choices: ["20/20 in both eyes", "20/40 in each eye (correction allowed) with at least a 70° field of vision", "20/100 in one eye", "Any vision is acceptable"],
+        answer: 1,
+        why: "You need at least 20/40 acuity in each eye (glasses/contacts allowed), a 70° field of vision in each eye, and the ability to tell traffic-signal colors apart." },
+
+      { q: "Diamond-shaped hazardous-materials placards on a vehicle are used to:",
+        choices: ["Advertise the company", "Warn others of the type of hazard and help emergency responders", "Show the vehicle's weight", "Mark the speed limit"],
+        answer: 1,
+        why: "Placards identify the hazard class so police, firefighters, and the public know the risk in a crash or spill." },
+
+      { q: "When rain or snow is heavy enough that you must run your windshield wipers, you should also:",
+        choices: ["Turn off your lights", "Turn on your low-beam headlights", "Use only parking lights", "Speed up to clear the area faster"],
+        answer: 1,
+        why: "Reduced visibility means others need to see you — turn on low-beam headlights (many states require lights whenever the wipers are on)." },
+
+      { q: "When driving through a work zone you should:",
+        choices: ["Hold your highway speed", "Slow down, increase following distance, and watch for workers and sudden stops", "Pass other vehicles quickly", "Drive on the shoulder"],
+        answer: 1,
+        why: "Work zones bring narrow lanes, workers, and abrupt stops — slow down, leave extra space, and stay alert; fines are often doubled." }
     ]
   },
 
@@ -410,7 +465,22 @@ const QUESTION_BANK = {
       { q: "Dual air brake systems are used so that:",
         choices: ["You can go faster", "If one system (front or rear) fails, the other still provides some braking", "They are quieter", "They never need draining"],
         answer: 1,
-        why: "A dual system has two separate air circuits; if one fails you keep partial braking — but stop as soon as it's safe." }
+        why: "A dual system has two separate air circuits; if one fails you keep partial braking — but stop as soon as it's safe." },
+
+      { q: "Air brakes take longer to act than hydraulic brakes because of brake lag — at 55 mph, brake lag alone adds roughly:",
+        choices: ["No extra distance", "About 32 feet of travel before the brakes take hold", "About 300 feet", "About 5 feet"],
+        answer: 1,
+        why: "Air needs about half a second to travel the lines (brake lag), adding roughly 32 feet at 55 mph on top of perception and reaction distance." },
+
+      { q: "If the ABS malfunction lamp stays lit, it means:",
+        choices: ["Your brakes have completely failed", "The anti-lock function is off, but you still have normal brakes", "You must stop immediately and cannot drive", "The parking brake is engaged"],
+        answer: 1,
+        why: "An ABS warning lamp means anti-lock is disabled — you keep normal braking but lose lock-up protection; get it repaired." },
+
+      { q: "You should NOT apply the parking (spring) brakes when:",
+        choices: ["Parking on a hill", "The brakes are very hot from hard use, or are wet in freezing temperatures", "Leaving the vehicle unattended", "The engine is off"],
+        answer: 1,
+        why: "Don't set spring brakes if the brakes are very hot (they can be damaged) or wet in freezing weather (they can freeze) — let them cool or dry first." }
     ]
   },
 
@@ -586,7 +656,22 @@ const QUESTION_BANK = {
       { q: "A key part of a bus pre-trip inspection that other vehicles don't require is checking:",
         choices: ["The trailer hitch", "Passenger items: seats, emergency exits, signaling devices, handholds, and the absence of aisle obstructions", "The fifth wheel", "Cargo tie-downs"],
         answer: 1,
-        why: "Bus pre-trips add passenger-safety items — seats, emergency exits, handholds, signaling devices, and clear aisles." }
+        why: "Bus pre-trips add passenger-safety items — seats, emergency exits, handholds, signaling devices, and clear aisles." },
+
+      { q: "A bus may carry small amounts of certain hazardous materials, but is NEVER allowed to carry:",
+        choices: ["Emergency hospital supplies", "Small-arms ammunition labeled ORM-D", "Poison gas, liquid poison, tear gas, irritating material, or more than 100 lb of other allowed hazmat", "Drinking water"],
+        answer: 2,
+        why: "Buses must never carry poison gas, liquid poison, tear gas, irritating material, or explosives (except small-arms ammo) — and no more than 100 lb total / 500 lb of permitted hazmat." },
+
+      { q: "Most accidents while loading or unloading a bus happen:",
+        choices: ["At highway rest areas", "At the bus stop — pulling tight to the curb and pulling back into traffic", "At fuel stations", "In the maintenance yard"],
+        answer: 1,
+        why: "Watch for people and obstacles when easing close to the curb and when re-entering traffic — that's where most loading/unloading crashes occur." },
+
+      { q: "Approaching a curve or turn, a bus driver should:",
+        choices: ["Hold highway speed", "Slow down before the curve so passengers aren't thrown and the bus doesn't lean dangerously", "Brake hard mid-curve", "Accelerate through it"],
+        answer: 1,
+        why: "Slow before the curve — braking or speeding in a curve can throw passengers and raises rollover risk on a tall bus." }
     ]
   }
 };
