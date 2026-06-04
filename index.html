@@ -62,14 +62,16 @@
   .bar > i{display:block; height:100%; background:linear-gradient(90deg,var(--green),var(--accent)); width:0%}
   .grid-btns{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:14px}
   button,.btn{
-    font:inherit; cursor:pointer; border:1px solid var(--line); background:var(--panel2);
-    color:var(--text); padding:11px 12px; border-radius:12px; font-weight:600;
+    font:inherit; cursor:pointer; border:1.5px solid #3c6353; background:var(--panel2);
+    color:var(--text); padding:12px 14px; border-radius:12px; font-weight:700;
     display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    transition:border-color .15s, background .15s;
   }
+  button:hover,.btn:hover{border-color:var(--green)}
   button:active{transform:scale(.98)}
   .btn.primary{background:var(--green); color:#04150e; border-color:transparent}
-  .btn.ghost{background:transparent}
-  .btn.danger{color:var(--red); border-color:#5b2b2b; background:#241313}
+  .btn.ghost{background:transparent; border-color:var(--line); font-weight:600}
+  .btn.danger{color:var(--red); border-color:#7a3636; background:#241313}
   .btn.block{width:100%}
   .btn.report{color:var(--amber); border-color:#5b4420; background:#241f10; font-weight:700}
   .btn.report:hover{border-color:var(--amber)}
@@ -207,6 +209,7 @@
     <div id="quizChoices"></div>
     <div id="quizExplain"></div>
     <button class="btn primary block hidden" id="nextBtn" onclick="nextQuiz()">Next ›</button>
+    <div id="reportRow"></div>
     <div id="examControls" class="grid-btns hidden" style="grid-template-columns:1fr 1fr; margin-top:4px">
       <button class="btn" id="examPrev" onclick="examPrevRouter()">‹ Prev</button>
       <button class="btn primary" id="examNext" onclick="examNextRouter()">Next ›</button>
@@ -493,6 +496,7 @@ function renderQuiz(){
   document.getElementById("quizBar").style.width=((cur.i)/cur.list.length*100)+"%";
   document.getElementById("quizQ").textContent=q.q;
   document.getElementById("quizExplain").innerHTML="";
+  document.getElementById("reportRow").innerHTML="";
   document.getElementById("nextBtn").classList.add("hidden");
   const keys=["A","B","C","D"];
   const cc=document.getElementById("quizChoices"); cc.innerHTML="";
@@ -523,8 +527,8 @@ function answerQuiz(ci,btn){
     if(bi===ci && !correct) b.classList.add("wrong");
   });
   const ex=document.getElementById("quizExplain");
-  ex.innerHTML=`<div class="explain ${correct?'':'bad'}"><b>${correct?'Correct ✓':'Not quite ✗'}</b> — ${q.why}</div>
-    <div class="report-row"><button class="btn report" onclick="reportQuestion('${key}',${idx})">🚩 Report a problem with this question</button></div>`;
+  ex.innerHTML=`<div class="explain ${correct?'':'bad'}"><b>${correct?'Correct ✓':'Not quite ✗'}</b> — ${q.why}</div>`;
+  document.getElementById("reportRow").innerHTML=`<div class="report-row"><button class="btn report" onclick="reportQuestion('${key}',${idx})">🚩 Report a problem with this question</button></div>`;
   document.getElementById("quizScore").textContent=`${cur.score} ✓`;
   document.getElementById("nextBtn").classList.remove("hidden");
   document.getElementById("nextBtn").textContent = (cur.i>=cur.list.length-1)?"See results ›":"Next ›";
@@ -781,7 +785,7 @@ function refreshMissed(){
   Object.keys(QUESTION_BANK).forEach(key=>{
     const ids=(progress.missed[key]||[]).filter(i=>QUESTION_BANK[key].questions[i]);
     if(!ids.length) return;
-    html+=`<div class="row" style="margin:22px 0 8px; align-items:center"><h3 style="margin:0">${QUESTION_BANK[key].title}</h3><button class="btn small" onclick="practiceMissed('${key}')">🔁 Practice these (${ids.length})</button></div>`;
+    html+=`<div class="row" style="margin:22px 0 8px; align-items:center"><h3 style="margin:0">${QUESTION_BANK[key].title}</h3><button class="btn primary small" onclick="practiceMissed('${key}')">🔁 Practice these (${ids.length})</button></div>`;
     ids.forEach(idx=>{
       const q=QUESTION_BANK[key].questions[idx];
       const st=progress.stats[key]?.[idx]||{seen:0,correct:0,wrong:0};
