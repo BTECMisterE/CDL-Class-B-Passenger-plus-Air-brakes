@@ -71,6 +71,9 @@
   .btn.ghost{background:transparent}
   .btn.danger{color:var(--red); border-color:#5b2b2b; background:#241313}
   .btn.block{width:100%}
+  .btn.report{color:var(--amber); border-color:#5b4420; background:#241f10; font-weight:700}
+  .btn.report:hover{border-color:var(--amber)}
+  .report-row{display:flex; justify-content:center; margin-top:16px}
   .small{font-size:13px; padding:8px 10px}
   .pill{font-size:12px; padding:4px 9px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--muted)}
 
@@ -521,7 +524,7 @@ function answerQuiz(ci,btn){
   });
   const ex=document.getElementById("quizExplain");
   ex.innerHTML=`<div class="explain ${correct?'':'bad'}"><b>${correct?'Correct ✓':'Not quite ✗'}</b> — ${q.why}</div>
-    <div style="text-align:right; margin-top:8px"><button class="btn small" onclick="reportQuestion('${key}',${idx})">🚩 Report question</button></div>`;
+    <div class="report-row"><button class="btn report" onclick="reportQuestion('${key}',${idx})">🚩 Report a problem with this question</button></div>`;
   document.getElementById("quizScore").textContent=`${cur.score} ✓`;
   document.getElementById("nextBtn").classList.remove("hidden");
   document.getElementById("nextBtn").textContent = (cur.i>=cur.list.length-1)?"See results ›":"Next ›";
@@ -784,7 +787,7 @@ function refreshMissed(){
         <summary>${q.q}<div class="muted" style="font-size:12px; font-weight:400; margin-top:4px">Missed ${st.wrong}×${st.seen?` · seen ${st.seen}×`:""} — tap to see the answer</div></summary>
         <div style="margin-top:12px">${choices}</div>
         <div class="explain"><b>Why:</b> ${q.why}</div>
-        <div class="row" style="margin-top:10px; justify-content:flex-end"><button class="btn small" onclick="reportQuestion('${key}',${idx})">🚩 Report question</button></div>
+        <div class="report-row" style="margin-top:12px"><button class="btn report" onclick="reportQuestion('${key}',${idx})">🚩 Report a problem with this question</button></div>
       </details>`;
     });
   });
