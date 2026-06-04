@@ -1,5 +1,5 @@
 /* Simple offline cache for the CDL Study app */
-const CACHE = "cdl-study-v3";
+const CACHE = "cdl-study-v4";
 const ASSETS = ["./", "./index.html", "./questions.js", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", e => {

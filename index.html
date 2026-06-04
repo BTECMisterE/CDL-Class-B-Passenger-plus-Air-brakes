@@ -131,6 +131,10 @@
   .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
   .stat{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px; text-align:center}
   .stat b{font-size:24px; display:block}
+  details > summary{cursor:pointer; font-weight:600; list-style:none; position:relative; padding-right:22px}
+  details > summary::-webkit-details-marker{display:none}
+  details > summary::after{content:"›"; position:absolute; right:2px; top:0; color:var(--muted); transition:transform .15s}
+  details[open] > summary::after{transform:rotate(90deg)}
 </style>
 </head>
 <body>
@@ -262,6 +266,8 @@
     </div>
     <div id="statSections"></div>
 
+    <button class="btn block" style="margin:14px 0" onclick="go('missed')">🎯 Review your missed questions (<span id="stMissedLink">0</span>)</button>
+
     <h3 style="margin-top:24px">Backup & Sync</h3>
     <div class="card">
       <p class="muted" style="margin-top:0; font-size:14px">Cloud sync keeps your progress matched across your phone and computer automatically. You can also save a manual backup file.</p>
@@ -275,12 +281,21 @@
     <button class="btn danger block" style="margin-top:10px" onclick="resetAll()">Reset all progress</button>
   </section>
 
+  <!-- MISSED QUESTIONS / ANALYSIS -->
+  <section id="view-missed" class="hidden">
+    <h2>Missed Questions</h2>
+    <p class="muted" style="margin-top:4px">Every question you've gotten wrong — with the correct answer and the reason why. Read through these, then practice them until the pile is empty.</p>
+    <div id="missedSummary" class="card" style="margin:12px 0"></div>
+    <div id="missedList"></div>
+  </section>
+
 </div>
 
 <!-- BOTTOM NAV -->
 <nav class="nav-bottom">
   <button id="nav-home" class="active" onclick="go('home')"><span class="ic">🏠</span>Home</button>
   <button id="nav-exam" onclick="startExam()"><span class="ic">📋</span>Exam</button>
+  <button id="nav-missed" onclick="go('missed')"><span class="ic">🎯</span>Missed</button>
   <button id="nav-stats" onclick="go('stats')"><span class="ic">📊</span>Progress</button>
 </nav>
 
@@ -385,17 +400,19 @@ function overall(){
 /* ============================================================
    NAVIGATION
    ============================================================ */
-const VIEWS=["home","section","quiz","result","flash","stats","examresult"];
+const VIEWS=["home","section","quiz","result","flash","stats","examresult","missed"];
 function go(view){
   VIEWS.forEach(v=>document.getElementById("view-"+v).classList.toggle("hidden", v!==view));
   const examActive = !!cur.exam && (view==="quiz"||view==="examresult");
   document.getElementById("nav-home").classList.toggle("active", !examActive && (view==="home"||view==="section"||view==="quiz"||view==="result"||view==="flash"));
   document.getElementById("nav-exam").classList.toggle("active", examActive);
   document.getElementById("nav-stats").classList.toggle("active", view==="stats");
+  document.getElementById("nav-missed").classList.toggle("active", view==="missed");
   window.scrollTo(0,0);
   if(view==="home") refreshHome();
   if(view==="stats") refreshStats();
   if(view==="section") refreshSection();
+  if(view==="missed") refreshMissed();
 }
 
 /* ============================================================
@@ -708,6 +725,9 @@ function examReviewPrev(){ if(cur.i>0){ cur.i--; renderExamReview(); window.scro
 /* ============================================================
    STATS
    ============================================================ */
+function missedTotal(){
+  return Object.keys(QUESTION_BANK).reduce((n,k)=>n+((progress.missed[k]||[]).length),0);
+}
 function refreshStats(){
   let total=0,correct=0,missed=0;
   Object.keys(QUESTION_BANK).forEach(k=>{
@@ -719,6 +739,7 @@ function refreshStats(){
   document.getElementById("stCorrect").textContent=correct;
   document.getElementById("stAccuracy").textContent=(total?Math.round(correct/total*100):0)+"%";
   document.getElementById("stMissed").textContent=missed;
+  document.getElementById("stMissedLink").textContent=missed;
   const wrap=document.getElementById("statSections"); wrap.innerHTML="";
   Object.keys(QUESTION_BANK).forEach(k=>{
     const m=sectionMastery(k);
@@ -726,6 +747,46 @@ function refreshStats(){
     d.innerHTML=`<div class="row"><b>${QUESTION_BANK[k].title}</b><span class="pct">${m.pct}%</span></div><div class="bar"><i style="width:${m.pct}%"></i></div>`;
     wrap.appendChild(d);
   });
+}
+
+/* ============================================================
+   MISSED QUESTIONS / ANALYSIS
+   Reads from progress.missed[section] = [qIndex,...]. Lists every
+   missed question grouped by section with the correct answer and
+   its rationale, plus a per-section "practice these" shortcut.
+   ============================================================ */
+function refreshMissed(){
+  const total=missedTotal();
+  const sum=document.getElementById("missedSummary");
+  const list=document.getElementById("missedList");
+  if(total===0){
+    sum.innerHTML=`<div style="text-align:center; padding:8px 4px"><div style="font-size:34px">✅</div><b>No missed questions</b><div class="muted" style="font-size:13px; margin-top:4px">Miss one in a quiz or exam and it'll land here for review.</div></div>`;
+    list.innerHTML="";
+    return;
+  }
+  sum.innerHTML=`<div class="row"><div><b style="font-size:20px">${total}</b> <span class="muted">question${total>1?"s":""} to review</span></div><span class="pill" style="color:var(--amber); border-color:var(--amber)">Clear the pile</span></div>`;
+  const keys=["A","B","C","D"];
+  let html="";
+  Object.keys(QUESTION_BANK).forEach(key=>{
+    const ids=(progress.missed[key]||[]).filter(i=>QUESTION_BANK[key].questions[i]);
+    if(!ids.length) return;
+    html+=`<div class="row" style="margin:22px 0 8px; align-items:center"><h3 style="margin:0">${QUESTION_BANK[key].title}</h3><button class="btn small" onclick="practiceMissed('${key}')">🔁 Practice these (${ids.length})</button></div>`;
+    ids.forEach(idx=>{
+      const q=QUESTION_BANK[key].questions[idx];
+      const st=progress.stats[key]?.[idx]||{seen:0,correct:0,wrong:0};
+      const choices=q.choices.map((c,ci)=>`<div class="choice${ci===q.answer?" correct":""}" style="margin-bottom:8px"><span class="key">${keys[ci]}</span><span>${c}</span></div>`).join("");
+      html+=`<details class="card" style="margin-bottom:10px">
+        <summary>${q.q}<div class="muted" style="font-size:12px; font-weight:400; margin-top:4px">Missed ${st.wrong}×${st.seen?` · seen ${st.seen}×`:""} — tap to see the answer</div></summary>
+        <div style="margin-top:12px">${choices}</div>
+        <div class="explain"><b>Why:</b> ${q.why}</div>
+      </details>`;
+    });
+  });
+  list.innerHTML=html;
+}
+function practiceMissed(key){
+  cur.section=key;
+  startQuiz(true); // reuses the section review-quiz; returns to this section's menu on exit
 }
 
 /* ============================================================
