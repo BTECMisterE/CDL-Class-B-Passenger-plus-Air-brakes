@@ -1,0 +1,13 @@
+{
+  "name": "CDL Study — Class B · Passenger · Air Brakes",
+  "short_name": "CDL Study",
+  "description": "Study for the CDL written tests: General Knowledge, Air Brakes, and Passenger endorsement.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1411",
+  "theme_color": "#0b3d2e",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

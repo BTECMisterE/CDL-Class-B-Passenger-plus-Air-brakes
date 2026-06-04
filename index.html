@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>CDL Study — Class B · Passenger · Air Brakes</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --bg:#0b1411; --panel:#13201b; --panel2:#1b2c25; --line:#274136;
+    --green:#19c37d; --green-d:#0b3d2e; --accent:#34d399;
+    --text:#e8f1ed; --muted:#8fa89d; --red:#ef4444; --amber:#f59e0b;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.5;
+    padding-bottom:env(safe-area-inset-bottom);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:680px; margin:0 auto; padding:16px 16px 90px}
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg,#0b3d2e,#0b1411);
+    padding:14px 16px 12px; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px}
+  .brand .logo{
+    width:30px;height:30px;border-radius:8px;background:var(--green);
+    display:grid;place-items:center;color:#04150e;font-weight:900;font-size:14px
+  }
+  .sync-pill{
+    font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px;
+    background:var(--panel); padding:6px 10px; border-radius:999px; border:1px solid var(--line);
+    cursor:pointer;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:#64748b}
+  .dot.on{background:var(--green); box-shadow:0 0 8px var(--green)}
+  .dot.err{background:var(--red)}
+  h1,h2,h3{margin:0 0 8px}
+  .muted{color:var(--muted)}
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; margin:12px 0;
+  }
+  .section-card{cursor:pointer; transition:transform .08s ease, border-color .15s}
+  .section-card:active{transform:scale(.99)}
+  .section-card:hover{border-color:var(--green)}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .pct{font-variant-numeric:tabular-nums; font-weight:700}
+  .bar{height:8px; background:var(--panel2); border-radius:999px; overflow:hidden; margin-top:10px}
+  .bar > i{display:block; height:100%; background:linear-gradient(90deg,var(--green),var(--accent)); width:0%}
+  .grid-btns{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:14px}
+  button,.btn{
+    font:inherit; cursor:pointer; border:1px solid var(--line); background:var(--panel2);
+    color:var(--text); padding:11px 12px; border-radius:12px; font-weight:600;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  }
+  button:active{transform:scale(.98)}
+  .btn.primary{background:var(--green); color:#04150e; border-color:transparent}
+  .btn.ghost{background:transparent}
+  .btn.danger{color:var(--red); border-color:#5b2b2b; background:#241313}
+  .btn.block{width:100%}
+  .small{font-size:13px; padding:8px 10px}
+  .pill{font-size:12px; padding:4px 9px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--muted)}
+
+  /* Quiz */
+  .progressline{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; font-size:13px; color:var(--muted)}
+  .qtext{font-size:18px; font-weight:600; margin:8px 0 16px}
+  .choice{
+    display:flex; gap:12px; align-items:flex-start; width:100%; text-align:left;
+    background:var(--panel); border:1.5px solid var(--line); padding:14px; border-radius:14px; margin-bottom:10px;
+  }
+  .choice .key{
+    flex:0 0 26px; height:26px; border-radius:7px; background:var(--panel2); border:1px solid var(--line);
+    display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--muted)
+  }
+  .choice.correct{border-color:var(--green); background:rgba(25,195,125,.12)}
+  .choice.correct .key{background:var(--green); color:#04150e; border-color:transparent}
+  .choice.wrong{border-color:var(--red); background:rgba(239,68,68,.12)}
+  .choice.wrong .key{background:var(--red); color:#fff; border-color:transparent}
+  .choice:disabled{cursor:default; opacity:1}
+  .explain{
+    border-left:3px solid var(--green); background:var(--panel); padding:12px 14px;
+    border-radius:8px; margin:6px 0 16px; font-size:14px;
+  }
+  .explain.bad{border-left-color:var(--amber)}
+
+  /* Flashcard */
+  .flash{
+    min-height:220px; border-radius:18px; border:1px solid var(--line); background:var(--panel);
+    padding:22px; display:flex; align-items:center; justify-content:center; text-align:center; cursor:pointer;
+    font-size:18px; font-weight:600;
+  }
+  .flash .hint{position:absolute; bottom:10px; left:0; right:0; font-size:12px; color:var(--muted); font-weight:400}
+  .flashwrap{position:relative}
+
+  .result-big{font-size:46px; font-weight:800; text-align:center}
+  .nav-bottom{
+    position:fixed; left:0; right:0; bottom:0; background:var(--panel); border-top:1px solid var(--line);
+    display:flex; padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-bottom button{flex:1; background:transparent; border:none; flex-direction:column; gap:2px; font-size:11px; color:var(--muted); padding:6px}
+  .nav-bottom button.active{color:var(--green)}
+  .nav-bottom .ic{font-size:18px}
+  .hidden{display:none !important}
+  input[type=text]{
+    width:100%; padding:12px; border-radius:12px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--text); font:inherit;
+  }
+  .toast{
+    position:fixed; left:50%; bottom:84px; transform:translateX(-50%);
+    background:#04150e; color:#fff; border:1px solid var(--green); padding:10px 16px; border-radius:999px;
+    font-size:14px; z-index:50; opacity:0; transition:opacity .2s; pointer-events:none;
+  }
+  .toast.show{opacity:1}
+  .modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.6); display:grid; place-items:center; z-index:60; padding:16px}
+  .modal{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; max-width:440px; width:100%}
+  a{color:var(--accent)}
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .stat{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px; text-align:center}
+  .stat b{font-size:24px; display:block}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><div class="logo">CDL</div> <span>CDL Study</span></div>
+  <div class="sync-pill" id="syncPill" onclick="openSync()">
+    <span class="dot" id="syncDot"></span><span id="syncLabel">Local only</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HOME -->
+  <section id="view-home">
+    <p class="muted" style="margin-top:6px">Class B · Passenger (P) · Air Brakes</p>
+    <div id="overall" class="card">
+      <div class="row">
+        <div><div style="font-size:13px" class="muted">Overall mastery</div><div class="pct" id="overallPct" style="font-size:28px">0%</div></div>
+        <div style="text-align:right"><div class="muted" style="font-size:13px">Questions seen</div><div class="pct" id="overallSeen" style="font-size:28px">0</div></div>
+      </div>
+      <div class="bar"><i id="overallBar"></i></div>
+    </div>
+    <div id="sections"></div>
+    <p class="muted" style="font-size:12px; text-align:center; margin-top:18px">
+      Study material based on the AAMVA/FMCSA model CDL manual. Always confirm details with your state's official CDL handbook.
+    </p>
+  </section>
+
+  <!-- SECTION MENU -->
+  <section id="view-section" class="hidden">
+    <button class="btn ghost small" onclick="go('home')">‹ Back</button>
+    <h2 id="secTitle" style="margin-top:12px"></h2>
+    <p class="muted" id="secBlurb"></p>
+    <div class="card">
+      <div class="row"><span>Progress</span><span class="pct" id="secPct">0%</span></div>
+      <div class="bar"><i id="secBar"></i></div>
+      <div class="muted" style="font-size:13px; margin-top:8px" id="secCount"></div>
+    </div>
+    <button class="btn primary block" style="margin:8px 0" onclick="startQuiz(false)">📝 Take a Quiz</button>
+    <button class="btn block" style="margin:8px 0" onclick="startFlash()">🃏 Flashcards</button>
+    <button class="btn block" style="margin:8px 0" id="reviewBtn" onclick="startQuiz(true)">🔁 Review Missed</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="view-quiz" class="hidden">
+    <div class="progressline">
+      <button class="btn ghost small" onclick="confirmExit()">✕ Exit</button>
+      <span id="quizCounter"></span>
+      <span class="pill" id="quizScore">0 ✓</span>
+    </div>
+    <div class="bar" style="margin-bottom:16px"><i id="quizBar"></i></div>
+    <div class="qtext" id="quizQ"></div>
+    <div id="quizChoices"></div>
+    <div id="quizExplain"></div>
+    <button class="btn primary block hidden" id="nextBtn" onclick="nextQuiz()">Next ›</button>
+  </section>
+
+  <!-- QUIZ RESULT -->
+  <section id="view-result" class="hidden">
+    <div class="card" style="text-align:center; padding:26px">
+      <div class="result-big" id="resPct">0%</div>
+      <div class="muted" id="resLine">—</div>
+      <div id="resBadge" style="margin-top:10px"></div>
+    </div>
+    <button class="btn primary block" style="margin:8px 0" id="resReviewBtn" onclick="startQuiz(true)">🔁 Review Missed</button>
+    <button class="btn block" style="margin:8px 0" onclick="startQuiz(false)">🔄 Retake Quiz</button>
+    <button class="btn ghost block" style="margin:8px 0" onclick="go('section')">Back to section</button>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="view-flash" class="hidden">
+    <div class="progressline">
+      <button class="btn ghost small" onclick="go('section')">✕ Exit</button>
+      <span id="flashCounter"></span>
+      <span></span>
+    </div>
+    <div class="bar" style="margin-bottom:16px"><i id="flashBar"></i></div>
+    <div class="flashwrap">
+      <div class="flash" id="flashCard" onclick="flipFlash()">
+        <span id="flashText"></span>
+        <span class="hint" id="flashHint">Tap to reveal answer</span>
+      </div>
+    </div>
+    <div class="grid-btns" style="grid-template-columns:1fr 1fr; margin-top:16px">
+      <button class="btn" onclick="prevFlash()">‹ Prev</button>
+      <button class="btn primary" onclick="nextFlash()">Next ›</button>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section id="view-stats" class="hidden">
+    <h2>Your Progress</h2>
+    <div class="stat-grid" style="margin:12px 0">
+      <div class="stat"><b id="stTotal">0</b><span class="muted">Questions answered</span></div>
+      <div class="stat"><b id="stCorrect">0</b><span class="muted">Correct overall</span></div>
+      <div class="stat"><b id="stAccuracy">0%</b><span class="muted">Accuracy</span></div>
+      <div class="stat"><b id="stMissed">0</b><span class="muted">In missed pile</span></div>
+    </div>
+    <div id="statSections"></div>
+
+    <h3 style="margin-top:24px">Backup & Sync</h3>
+    <div class="card">
+      <p class="muted" style="margin-top:0; font-size:14px">Cloud sync keeps your progress matched across your phone and computer automatically. You can also save a manual backup file.</p>
+      <button class="btn primary block" style="margin:6px 0" onclick="openSync()">☁️ Set up / manage Cloud Sync</button>
+      <div class="grid-btns" style="grid-template-columns:1fr 1fr">
+        <button class="btn small" onclick="exportData()">⬇️ Export backup</button>
+        <button class="btn small" onclick="document.getElementById('importFile').click()">⬆️ Import backup</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" class="hidden" onchange="importData(event)">
+    </div>
+    <button class="btn danger block" style="margin-top:10px" onclick="resetAll()">Reset all progress</button>
+  </section>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav-bottom">
+  <button id="nav-home" class="active" onclick="go('home')"><span class="ic">🏠</span>Home</button>
+  <button id="nav-stats" onclick="go('stats')"><span class="ic">📊</span>Progress</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- ACCOUNT / SYNC MODAL -->
+<div class="modal-bg hidden" id="syncModal">
+  <div class="modal">
+    <div class="row"><h3 style="margin:0">☁️ Account &amp; Sync</h3><button class="btn ghost small" onclick="closeSync()">✕</button></div>
+
+    <!-- signed out -->
+    <div id="acctSignedOut">
+      <p class="muted" style="font-size:14px">Sign in with your Google account to automatically sync your progress across every device — your phone, tablet, and computer.</p>
+      <button class="btn primary block" style="margin-top:8px" id="googleBtn" onclick="signInGoogle()">
+        <span style="font-size:16px">🔑</span> Sign in with Google
+      </button>
+      <p class="muted" style="font-size:12px; margin-top:10px">Your progress stays private to your account. You can keep using the app without signing in — progress saves on this device and you can move it with Export/Import backups.</p>
+    </div>
+
+    <!-- signed in -->
+    <div id="acctSignedIn" class="hidden">
+      <div class="card" style="margin:10px 0">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0">
+          <img id="acctPhoto" alt="" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;background:var(--panel2);object-fit:cover">
+          <div style="min-width:0">
+            <div id="acctName" style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"></div>
+            <div id="acctEmail" class="muted" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"></div>
+          </div>
+        </div>
+      </div>
+      <p class="muted" style="font-size:13px" id="acctSyncMsg">Your progress is syncing to your account.</p>
+      <button class="btn ghost block danger" style="margin-top:8px" onclick="signOutUser()">Sign out</button>
+    </div>
+
+    <details style="margin-top:14px" id="acctNoBackend">
+      <summary class="muted" style="font-size:13px; cursor:pointer">Sync isn't available — what's this?</summary>
+      <p class="muted" style="font-size:13px">Cloud sync needs the Firebase backend to be connected. Until then, this app still saves your progress on each device and you can move it with Export/Import backups.</p>
+    </details>
+  </div>
+</div>
+
+<!-- ============ FIREBASE CONFIG ============
+     PASTE YOUR FIREBASE CONFIG BELOW to enable automatic cloud sync.
+     Leave as null to run in local-only mode (still fully functional). -->
+<script>
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyAdve0TwzbpOCF2xb5qVJ6dpCnbjKId35w",
+    authDomain: "cdl-study-guide.firebaseapp.com",
+    databaseURL: "https://cdl-study-guide-default-rtdb.firebaseio.com",
+    projectId: "cdl-study-guide",
+    storageBucket: "cdl-study-guide.firebasestorage.app",
+    messagingSenderId: "296300714589",
+    appId: "1:296300714589:web:e21307593aabe85406cbb4"
+  };
+</script>
+
+<script src="questions.js"></script>
+<script>
+/* ============================================================
+   STATE & STORAGE
+   progress shape:
+   { stats: { [sectionKey]: { [qIndex]: {seen, correct, wrong} } },
+     missed: { [sectionKey]: [qIndex,...] },
+     updated: <counter> }
+   ============================================================ */
+const LS_KEY = "cdl_study_v1";
+let progress = loadProgress();
+let cur = { section:null, mode:null, list:[], i:0, score:0, answered:false, reviewMode:false, flashFlipped:false };
+
+function loadProgress(){
+  try{
+    const p = JSON.parse(localStorage.getItem(LS_KEY));
+    if(p && p.stats) return p;
+  }catch(e){}
+  return { stats:{}, missed:{}, updated:0 };
+}
+function saveProgress(push=true){
+  progress.updated = (progress.updated||0)+1;
+  localStorage.setItem(LS_KEY, JSON.stringify(progress));
+  refreshHome();
+  if(push && Sync.enabled) Sync.push();
+}
+function secStats(key){ return progress.stats[key] || (progress.stats[key]={}); }
+function qStat(key,i){ const s=secStats(key); return s[i] || (s[i]={seen:0,correct:0,wrong:0}); }
+
+/* ---------- mastery math ---------- */
+function sectionMastery(key){
+  const qs = QUESTION_BANK[key].questions;
+  let mastered=0, seen=0;
+  qs.forEach((_,i)=>{
+    const st = progress.stats[key]?.[i];
+    if(st && st.seen>0){ seen++; if(st.correct>0 && st.correct>=st.wrong) mastered++; }
+  });
+  return { pct: Math.round((mastered/qs.length)*100), seen, total:qs.length, mastered };
+}
+function overall(){
+  let m=0,t=0,seen=0;
+  Object.keys(QUESTION_BANK).forEach(k=>{ const s=sectionMastery(k); m+=s.mastered; t+=s.total; seen+=s.seen; });
+  return { pct: t? Math.round(m/t*100):0, seen, total:t };
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const VIEWS=["home","section","quiz","result","flash","stats"];
+function go(view){
+  VIEWS.forEach(v=>document.getElementById("view-"+v).classList.toggle("hidden", v!==view));
+  document.getElementById("nav-home").classList.toggle("active", view==="home"||view==="section"||view==="quiz"||view==="result"||view==="flash");
+  document.getElementById("nav-stats").classList.toggle("active", view==="stats");
+  window.scrollTo(0,0);
+  if(view==="home") refreshHome();
+  if(view==="stats") refreshStats();
+  if(view==="section") refreshSection();
+}
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function refreshHome(){
+  const o=overall();
+  document.getElementById("overallPct").textContent=o.pct+"%";
+  document.getElementById("overallSeen").textContent=o.seen+"/"+o.total;
+  document.getElementById("overallBar").style.width=o.pct+"%";
+  const wrap=document.getElementById("sections");
+  wrap.innerHTML="";
+  Object.keys(QUESTION_BANK).forEach(key=>{
+    const sec=QUESTION_BANK[key]; const m=sectionMastery(key);
+    const div=document.createElement("div");
+    div.className="card section-card";
+    div.onclick=()=>openSection(key);
+    div.innerHTML=`
+      <div class="row">
+        <div><h3 style="margin:0">${sec.title}</h3><div class="muted" style="font-size:13px">${sec.questions.length} questions</div></div>
+        <div class="pct">${m.pct}%</div>
+      </div>
+      <div class="bar"><i style="width:${m.pct}%"></i></div>`;
+    wrap.appendChild(div);
+  });
+}
+
+/* ============================================================
+   SECTION
+   ============================================================ */
+function openSection(key){ cur.section=key; go("section"); }
+function refreshSection(){
+  const key=cur.section, sec=QUESTION_BANK[key], m=sectionMastery(key);
+  document.getElementById("secTitle").textContent=sec.title;
+  document.getElementById("secBlurb").textContent=sec.blurb;
+  document.getElementById("secPct").textContent=m.pct+"%";
+  document.getElementById("secBar").style.width=m.pct+"%";
+  document.getElementById("secCount").textContent=`${m.mastered} of ${m.total} mastered · ${m.seen} seen`;
+  const missed=(progress.missed[key]||[]).length;
+  const rb=document.getElementById("reviewBtn");
+  rb.disabled = missed===0;
+  rb.style.opacity = missed===0? .5:1;
+  rb.textContent = missed? `🔁 Review Missed (${missed})` : "🔁 Review Missed (none yet)";
+}
+
+/* ============================================================
+   QUIZ
+   ============================================================ */
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor((cur._seed=(cur._seed*9301+49297)%233280)/233280*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function startQuiz(reviewMode){
+  const key=cur.section;
+  cur._seed = (progress.updated*7+key.length+ (reviewMode?13:0))%233280 + 1;
+  let indices;
+  if(reviewMode){
+    indices=(progress.missed[key]||[]).slice();
+    if(indices.length===0){ toast("No missed questions yet!"); return; }
+  }else{
+    indices=QUESTION_BANK[key].questions.map((_,i)=>i);
+  }
+  indices=shuffle(indices);
+  cur.mode="quiz"; cur.reviewMode=reviewMode; cur.list=indices; cur.i=0; cur.score=0; cur.answered=false;
+  go("quiz"); renderQuiz();
+}
+function renderQuiz(){
+  const key=cur.section, idx=cur.list[cur.i], q=QUESTION_BANK[key].questions[idx];
+  cur.answered=false;
+  document.getElementById("quizCounter").textContent=`${cur.i+1} / ${cur.list.length}`+(cur.reviewMode?" · review":"");
+  document.getElementById("quizScore").textContent=`${cur.score} ✓`;
+  document.getElementById("quizBar").style.width=((cur.i)/cur.list.length*100)+"%";
+  document.getElementById("quizQ").textContent=q.q;
+  document.getElementById("quizExplain").innerHTML="";
+  document.getElementById("nextBtn").classList.add("hidden");
+  const keys=["A","B","C","D"];
+  const cc=document.getElementById("quizChoices"); cc.innerHTML="";
+  q.choices.forEach((c,ci)=>{
+    const b=document.createElement("button");
+    b.className="choice"; b.innerHTML=`<span class="key">${keys[ci]}</span><span>${c}</span>`;
+    b.onclick=()=>answerQuiz(ci,b);
+    cc.appendChild(b);
+  });
+}
+function answerQuiz(ci,btn){
+  if(cur.answered) return;
+  cur.answered=true;
+  const key=cur.section, idx=cur.list[cur.i], q=QUESTION_BANK[key].questions[idx];
+  const correct = ci===q.answer;
+  const st=qStat(key,idx); st.seen++;
+  if(correct){ st.correct++; cur.score++; }
+  else { st.wrong++; }
+  // update missed pile
+  progress.missed[key]=progress.missed[key]||[];
+  if(correct){ progress.missed[key]=progress.missed[key].filter(x=>x!==idx); }
+  else if(!progress.missed[key].includes(idx)){ progress.missed[key].push(idx); }
+
+  const btns=document.querySelectorAll("#quizChoices .choice");
+  btns.forEach((b,bi)=>{
+    b.disabled=true;
+    if(bi===q.answer) b.classList.add("correct");
+    if(bi===ci && !correct) b.classList.add("wrong");
+  });
+  const ex=document.getElementById("quizExplain");
+  ex.innerHTML=`<div class="explain ${correct?'':'bad'}"><b>${correct?'Correct ✓':'Not quite ✗'}</b> — ${q.why}</div>`;
+  document.getElementById("quizScore").textContent=`${cur.score} ✓`;
+  document.getElementById("nextBtn").classList.remove("hidden");
+  document.getElementById("nextBtn").textContent = (cur.i>=cur.list.length-1)?"See results ›":"Next ›";
+  saveProgress();
+}
+function nextQuiz(){
+  if(cur.i>=cur.list.length-1){ showResult(); return; }
+  cur.i++; renderQuiz(); window.scrollTo(0,0);
+}
+function confirmExit(){ if(confirm("Exit this quiz? Your answered questions are already saved.")) go("section"); }
+function showResult(){
+  const pct=Math.round(cur.score/cur.list.length*100);
+  go("result");
+  document.getElementById("resPct").textContent=pct+"%";
+  document.getElementById("resLine").textContent=`${cur.score} of ${cur.list.length} correct`;
+  let badge="";
+  if(pct>=80) badge=`<span class="pill" style="color:var(--green);border-color:var(--green)">✓ Passing range (80%+)</span>`;
+  else badge=`<span class="pill" style="color:var(--amber);border-color:var(--amber)">Keep practicing — aim for 80%</span>`;
+  document.getElementById("resBadge").innerHTML=badge;
+  const missed=(progress.missed[cur.section]||[]).length;
+  const rb=document.getElementById("resReviewBtn");
+  rb.style.display = missed? "flex":"none";
+  rb.textContent=`🔁 Review Missed (${missed})`;
+}
+
+/* ============================================================
+   FLASHCARDS
+   ============================================================ */
+function startFlash(){
+  cur.mode="flash"; cur.list=QUESTION_BANK[cur.section].questions.map((_,i)=>i); cur.i=0; cur.flashFlipped=false;
+  go("flash"); renderFlash();
+}
+function renderFlash(){
+  const key=cur.section, idx=cur.list[cur.i], q=QUESTION_BANK[key].questions[idx];
+  cur.flashFlipped=false;
+  document.getElementById("flashCounter").textContent=`${cur.i+1} / ${cur.list.length}`;
+  document.getElementById("flashBar").style.width=((cur.i+1)/cur.list.length*100)+"%";
+  document.getElementById("flashText").textContent=q.q;
+  document.getElementById("flashHint").textContent="Tap to reveal answer";
+}
+function flipFlash(){
+  const key=cur.section, idx=cur.list[cur.i], q=QUESTION_BANK[key].questions[idx];
+  cur.flashFlipped=!cur.flashFlipped;
+  if(cur.flashFlipped){
+    document.getElementById("flashText").innerHTML=`<div style="color:var(--green); font-size:17px">${q.choices[q.answer]}</div><div class="muted" style="font-size:14px; font-weight:400; margin-top:10px">${q.why}</div>`;
+    document.getElementById("flashHint").textContent="Tap to see question";
+  }else renderFlash();
+}
+function nextFlash(){ if(cur.i<cur.list.length-1){cur.i++; renderFlash();} else toast("That's the last card"); }
+function prevFlash(){ if(cur.i>0){cur.i--; renderFlash();} }
+
+/* ============================================================
+   STATS
+   ============================================================ */
+function refreshStats(){
+  let total=0,correct=0,missed=0;
+  Object.keys(QUESTION_BANK).forEach(k=>{
+    const s=progress.stats[k]||{};
+    Object.values(s).forEach(v=>{ total+=v.seen; correct+=v.correct; });
+    missed+=(progress.missed[k]||[]).length;
+  });
+  document.getElementById("stTotal").textContent=total;
+  document.getElementById("stCorrect").textContent=correct;
+  document.getElementById("stAccuracy").textContent=(total?Math.round(correct/total*100):0)+"%";
+  document.getElementById("stMissed").textContent=missed;
+  const wrap=document.getElementById("statSections"); wrap.innerHTML="";
+  Object.keys(QUESTION_BANK).forEach(k=>{
+    const m=sectionMastery(k);
+    const d=document.createElement("div"); d.className="card";
+    d.innerHTML=`<div class="row"><b>${QUESTION_BANK[k].title}</b><span class="pct">${m.pct}%</span></div><div class="bar"><i style="width:${m.pct}%"></i></div>`;
+    wrap.appendChild(d);
+  });
+}
+
+/* ============================================================
+   EXPORT / IMPORT / RESET
+   ============================================================ */
+function exportData(){
+  const blob=new Blob([JSON.stringify(progress,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="cdl-progress-backup.json"; a.click();
+  toast("Backup downloaded");
+}
+function importData(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+      const p=JSON.parse(r.result);
+      if(!p.stats) throw 0;
+      progress=mergeProgress(progress,p); saveProgress();
+      toast("Backup imported & merged"); refreshStats();
+    }catch(e){ toast("Couldn't read that file"); } };
+  r.readAsText(f); ev.target.value="";
+}
+function resetAll(){
+  if(!confirm("Erase ALL progress on this device? This can't be undone.")) return;
+  progress={stats:{},missed:{},updated:0}; saveProgress(); toast("Progress reset"); go("home");
+}
+/* merge two progress objects, keeping the best of each question */
+function mergeProgress(a,b){
+  const out={stats:{},missed:{},updated:Math.max(a.updated||0,b.updated||0)+1};
+  const keys=new Set([...Object.keys(a.stats||{}),...Object.keys(b.stats||{})]);
+  keys.forEach(k=>{
+    out.stats[k]={};
+    const ids=new Set([...Object.keys(a.stats?.[k]||{}),...Object.keys(b.stats?.[k]||{})]);
+    ids.forEach(i=>{
+      const x=a.stats?.[k]?.[i]||{seen:0,correct:0,wrong:0};
+      const y=b.stats?.[k]?.[i]||{seen:0,correct:0,wrong:0};
+      out.stats[k][i]={seen:Math.max(x.seen,y.seen),correct:Math.max(x.correct,y.correct),wrong:Math.max(x.wrong,y.wrong)};
+    });
+  });
+  const mk=new Set([...Object.keys(a.missed||{}),...Object.keys(b.missed||{})]);
+  mk.forEach(k=>{ out.missed[k]=Array.from(new Set([...(a.missed?.[k]||[]),...(b.missed?.[k]||[])])); });
+  return out;
+}
+
+/* ============================================================
+   ACCOUNTS & CLOUD SYNC  (Firebase Auth + Firestore)
+   Signed-in users store progress at cdl_progress/<uid>.
+   On first sign-in, local progress is merged up to the account.
+   ============================================================ */
+const Sync = {
+  enabled:false, db:null, auth:null, ready:false, user:null, unsub:null, applying:false,
+  init(){
+    if(!FIREBASE_CONFIG){ setSyncUI("off","Local only"); return; }
+    try{
+      firebase.initializeApp(FIREBASE_CONFIG);
+      this.db=firebase.firestore();
+      this.auth=firebase.auth();
+      this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+      this.ready=true;
+      setSyncUI("off","Sign in");
+      this.auth.onAuthStateChanged(u=>this.onAuth(u));
+    }catch(e){ console.warn("Firebase init failed",e); setSyncUI("err","Sync error"); }
+  },
+  onAuth(user){
+    this.user=user;
+    if(user){
+      this.start();
+    }else{
+      this.enabled=false;
+      this.unsub && this.unsub(); this.unsub=null;
+      setSyncUI("off","Sign in");
+    }
+    refreshAcctUI();
+  },
+  start(){
+    if(!this.ready||!this.user) return;
+    this.enabled=true;
+    setSyncUI("on","Syncing…");
+    const ref=this.db.collection("cdl_progress").doc(this.user.uid);
+    // pull + live updates; merges local into account on first snapshot
+    this.unsub && this.unsub();
+    this.unsub=ref.onSnapshot(snap=>{
+      if(this.applying) return;
+      if(snap.exists){
+        const remote=snap.data().payload;
+        if(remote){
+          progress=mergeProgress(progress,remote);
+          localStorage.setItem(LS_KEY,JSON.stringify(progress));
+          refreshHome();
+        }
+      }
+      setSyncUI("on","Synced");
+      // push our merged state back up (first sign-in seeds the account doc)
+      this.push(true);
+    },err=>{ console.warn(err); setSyncUI("err","Sync error"); });
+  },
+  push(silent){
+    if(!this.enabled||!this.ready||!this.user) return;
+    const ref=this.db.collection("cdl_progress").doc(this.user.uid);
+    this.applying=true;
+    ref.set({payload:progress, updated:progress.updated},{merge:true})
+      .then(()=>{ this.applying=false; if(!silent) setSyncUI("on","Synced"); })
+      .catch(e=>{ this.applying=false; console.warn(e); setSyncUI("err","Sync error"); });
+  }
+};
+function setSyncUI(state,label){
+  const dot=document.getElementById("syncDot");
+  dot.className="dot"+(state==="on"?" on":state==="err"?" err":"");
+  document.getElementById("syncLabel").textContent=label;
+}
+function openSync(){
+  document.getElementById("syncModal").classList.remove("hidden");
+  refreshAcctUI();
+}
+function closeSync(){ document.getElementById("syncModal").classList.add("hidden"); }
+function refreshAcctUI(){
+  const out=document.getElementById("acctSignedOut");
+  const inn=document.getElementById("acctSignedIn");
+  const noBackend=document.getElementById("acctNoBackend");
+  if(!FIREBASE_CONFIG){
+    out.classList.add("hidden"); inn.classList.add("hidden");
+    noBackend.style.display="block"; noBackend.open=true;
+    return;
+  }
+  noBackend.style.display="none";
+  const u=Sync.user;
+  if(u){
+    out.classList.add("hidden"); inn.classList.remove("hidden");
+    document.getElementById("acctName").textContent=u.displayName||"Signed in";
+    document.getElementById("acctEmail").textContent=u.email||"";
+    const photo=document.getElementById("acctPhoto");
+    if(u.photoURL){ photo.src=u.photoURL; photo.style.display="block"; }
+    else photo.style.display="none";
+  }else{
+    out.classList.remove("hidden"); inn.classList.add("hidden");
+  }
+}
+function signInGoogle(){
+  if(!Sync.ready){ toast("Firebase not connected yet"); return; }
+  const provider=new firebase.auth.GoogleAuthProvider();
+  Sync.auth.signInWithPopup(provider)
+    .then(()=>{ closeSync(); toast("Signed in — syncing your progress"); })
+    .catch(e=>{
+      console.warn(e);
+      if(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment"){
+        Sync.auth.signInWithRedirect(provider); // fall back for in-app / mobile browsers
+      }else if(e.code!=="auth/popup-closed-by-user" && e.code!=="auth/cancelled-popup-request"){
+        toast("Sign-in failed — try again");
+      }
+    });
+}
+function signOutUser(){
+  if(!Sync.auth) return;
+  Sync.auth.signOut().then(()=>{ toast("Signed out"); closeSync(); });
+}
+
+/* ============================================================
+   MISC
+   ============================================================ */
+let toastT;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1800);
+}
+document.getElementById("syncModal").addEventListener("click",e=>{ if(e.target.id==="syncModal") closeSync(); });
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function boot(){
+  refreshHome(); go("home");
+  if(window.firebase || !FIREBASE_CONFIG) Sync.init();
+  // register service worker for offline
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+}
+// load firebase only if configured (app → auth → firestore, then boot)
+if(FIREBASE_CONFIG){
+  const loadScript=src=>new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.body.appendChild(s); });
+  const base="https://www.gstatic.com/firebasejs/10.12.2/";
+  loadScript(base+"firebase-app-compat.js")
+    .then(()=>loadScript(base+"firebase-auth-compat.js"))
+    .then(()=>loadScript(base+"firebase-firestore-compat.js"))
+    .then(boot)
+    .catch(e=>{ console.warn("Firebase load failed",e); boot(); });
+}else{ boot(); }
+</script>
+</body>
+</html>

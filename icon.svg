@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0b3d2e"/>
+  <rect x="96" y="150" width="320" height="170" rx="20" fill="#19c37d"/>
+  <rect x="300" y="190" width="116" height="130" rx="16" fill="#0b3d2e"/>
+  <circle cx="170" cy="360" r="40" fill="#13201b" stroke="#19c37d" stroke-width="14"/>
+  <circle cx="342" cy="360" r="40" fill="#13201b" stroke="#19c37d" stroke-width="14"/>
+  <text x="256" y="265" font-family="Arial, sans-serif" font-size="120" font-weight="900" fill="#04150e" text-anchor="middle">CDL</text>
+</svg>

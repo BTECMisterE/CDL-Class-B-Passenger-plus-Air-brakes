@@ -1,0 +1,9 @@
+# OS / editor cruft
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp
+.vscode/
+
+# Local-only notes (keep the running log out of the public repo)
+SESSION-LOG.md
