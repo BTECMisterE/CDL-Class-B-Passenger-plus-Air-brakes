@@ -114,6 +114,31 @@
     border:1px solid var(--line, rgba(255,255,255,.12)); background:var(--panel);
     object-fit:cover;
   }
+  /* Pre-trip section menu */
+  .pt-sec{display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:11px 0; border-bottom:1px solid var(--line, rgba(255,255,255,.08))}
+  .pt-sec-name{font-size:14px}
+  .pt-sec-btns{display:flex; gap:6px; flex-shrink:0}
+  .btn.small{padding:7px 12px; font-size:13px; width:auto; display:inline-flex}
+  /* Drag-to-order tile game */
+  .pt-order{display:flex; flex-direction:column; gap:8px; margin:10px 0 16px}
+  .pt-card{display:flex; align-items:center; gap:10px; background:var(--panel);
+    border:1px solid var(--line, rgba(255,255,255,.14)); border-radius:10px;
+    padding:8px 10px; font-size:14px}
+  .pt-card.dragging{opacity:.9; border-color:var(--green); box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .pt-card.correct{border-color:var(--green); background:rgba(34,197,94,.12)}
+  .pt-card.wrong{border-color:var(--amber); background:rgba(245,158,11,.12)}
+  .pt-handle{cursor:grab; touch-action:none; font-size:20px; line-height:1;
+    color:var(--muted); user-select:none; padding:0 2px}
+  .pt-handle:active{cursor:grabbing}
+  .pt-thumb{width:46px; height:46px; border-radius:8px; object-fit:cover; flex-shrink:0;
+    border:1px solid var(--line, rgba(255,255,255,.12))}
+  .pt-thumb-blank{background:var(--bg, rgba(255,255,255,.05))}
+  .pt-card-title{flex:1; min-width:0}
+  .pt-card-moves{display:flex; gap:4px; flex-shrink:0}
+  .pt-move{background:transparent; border:1px solid var(--line, rgba(255,255,255,.22));
+    color:var(--text); border-radius:6px; width:30px; height:30px; font-size:15px; cursor:pointer}
+  .pt-move:active{background:rgba(255,255,255,.08)}
 
   /* Flashcard */
   .flash{
@@ -194,11 +219,11 @@
         <span class="pill" style="color:var(--accent); border-color:var(--accent); white-space:nowrap">Start ›</span>
       </div>
     </div>
-    <div class="card section-card" onclick="startPretrip()" style="border-color:var(--amber)">
+    <div class="card section-card" onclick="openPretripMenu()" style="border-color:var(--amber)">
       <div class="row">
         <div>
           <h3 style="margin:0">🚌 Pre-Trip Walkthrough</h3>
-          <div class="muted" style="font-size:13px">Learn the inspection in order — pick the next step each time, one step at a time.</div>
+          <div class="muted" style="font-size:13px">Practice each section — drill the next step or play the drag-to-order tile game — then run the full walkthrough.</div>
         </div>
         <span class="pill" style="color:var(--amber); border-color:var(--amber); white-space:nowrap">Start ›</span>
       </div>
@@ -344,6 +369,29 @@
     <button class="btn primary block hidden" id="ptNext" onclick="ptNext()">Next step ›</button>
   </section>
 
+  <section id="view-ptmenu" class="hidden">
+    <div class="progressline">
+      <button class="btn ghost small" onclick="go('home')">✕ Exit</button>
+      <span>Pre-Trip Walkthrough</span>
+      <span></span>
+    </div>
+    <button class="btn primary block" style="margin-bottom:6px" onclick="startPretrip(null)">🚌 Full walkthrough — all steps in order</button>
+    <p class="muted" style="font-size:12px; margin:0 0 16px">Or practice one section at a time. <b>Drill</b> = pick the next step. <b>Order</b> = drag the tiles into sequence.</p>
+    <div id="ptMenuList"></div>
+  </section>
+
+  <section id="view-ptorder" class="hidden">
+    <div class="progressline">
+      <button class="btn ghost small" onclick="go('ptmenu')">‹ Sections</button>
+      <span id="ptoTitle"></span>
+      <span class="pill" id="ptoScore"></span>
+    </div>
+    <p class="muted" id="ptoHint" style="font-size:13px"></p>
+    <div id="ptOrderList" class="pt-order"></div>
+    <button class="btn primary block" id="ptoCheck" onclick="checkPtOrder()">Check order</button>
+    <button class="btn ghost block hidden" id="ptoRedo"></button>
+  </section>
+
 </div>
 
 <!-- BOTTOM NAV -->
@@ -455,11 +503,11 @@ function overall(){
 /* ============================================================
    NAVIGATION
    ============================================================ */
-const VIEWS=["home","section","quiz","result","flash","stats","examresult","missed","pretrip"];
+const VIEWS=["home","section","quiz","result","flash","stats","examresult","missed","pretrip","ptmenu","ptorder"];
 function go(view){
   VIEWS.forEach(v=>document.getElementById("view-"+v).classList.toggle("hidden", v!==view));
   const examActive = !!cur.exam && (view==="quiz"||view==="examresult");
-  document.getElementById("nav-home").classList.toggle("active", !examActive && (view==="home"||view==="section"||view==="quiz"||view==="result"||view==="flash"||view==="pretrip"));
+  document.getElementById("nav-home").classList.toggle("active", !examActive && (view==="home"||view==="section"||view==="quiz"||view==="result"||view==="flash"||view==="pretrip"||view==="ptmenu"||view==="ptorder"));
   document.getElementById("nav-exam").classList.toggle("active", examActive);
   document.getElementById("nav-stats").classList.toggle("active", view==="stats");
   document.getElementById("nav-missed").classList.toggle("active", view==="missed");
@@ -778,8 +826,34 @@ const PRETRIP = [
   {phase:"12 · Left Side & Ready", title:"Fuse box", detail:"Fuse box is all connected with no signs of nesting, damage, or arcing.", img:"image61.jpg"},
   {phase:"12 · Left Side & Ready", title:"Left blinker check & ready to drive", detail:"Switch to the left blinker: check the front-left and back-left blinkers, grab the wheel chocks, and let the inspector know the bus is ready to drive and move into maneuvers."},
 ];
-function startPretrip(){
-  cur.pt={i:0, score:0, answered:false, done:[]};
+// Group PRETRIP into contiguous logical sections by phase.
+function pretripSections(){
+  const secs=[]; let s=null;
+  PRETRIP.forEach((step,i)=>{
+    if(!s || s.phase!==step.phase){ s={phase:step.phase, idxs:[]}; secs.push(s); }
+    s.idxs.push(i);
+  });
+  return secs;
+}
+// Section menu: full walkthrough + per-section Drill / Order options.
+function openPretripMenu(){
+  go("ptmenu");
+  const secs=pretripSections();
+  document.getElementById("ptMenuList").innerHTML=secs.map((s,si)=>`
+    <div class="pt-sec">
+      <div class="pt-sec-name">${s.phase} <span class="muted">· ${s.idxs.length}</span></div>
+      <div class="pt-sec-btns">
+        <button class="btn small" onclick="startPretrip(${si})">▶ Drill</button>
+        <button class="btn small ghost" onclick="startPtOrder(${si})">⇅ Order</button>
+      </div>
+    </div>`).join("");
+}
+function startPretrip(scope){
+  const secs=pretripSections();
+  const full = (scope===null || scope===undefined);
+  const list = full ? PRETRIP.slice() : secs[scope].idxs.map(i=>PRETRIP[i]);
+  cur.pt={i:0, score:0, answered:false, done:[], list, scope:full?null:scope,
+          name: full ? "your pre-trip inspection" : secs[scope].phase};
   go("pretrip"); renderPretrip();
 }
 function renderPtDone(){
@@ -788,23 +862,25 @@ function renderPtDone(){
   el.innerHTML=done.map((d,n)=>`<div class="pt-done-row">${d.ok?"✓":"✗"} <span>${n+1}. ${d.title}</span></div>`).join("");
 }
 function renderPretrip(){
-  const pt=cur.pt, step=PRETRIP[pt.i];
+  const pt=cur.pt, list=pt.list, step=list[pt.i];
   pt.answered=false;
-  document.getElementById("ptCounter").textContent=`Step ${pt.i+1} / ${PRETRIP.length}`;
+  document.getElementById("ptCounter").textContent=`Step ${pt.i+1} / ${list.length}`;
   document.getElementById("ptScore").textContent=`${pt.score} ✓`;
-  document.getElementById("ptBar").style.width=(pt.i/PRETRIP.length*100)+"%";
+  document.getElementById("ptBar").style.width=(pt.i/list.length*100)+"%";
   document.getElementById("ptPhase").textContent=step.phase;
   renderPtDone();
   document.getElementById("ptQ").textContent = pt.i===0
-    ? "You're starting your pre-trip inspection. What do you do FIRST?"
-    : `Done: “${PRETRIP[pt.i-1].title}.” What's the next step?`;
+    ? `You're starting ${pt.name}. What do you do FIRST?`
+    : `Done: “${list[pt.i-1].title}.” What's the next step?`;
   document.getElementById("ptExplain").innerHTML="";
   document.getElementById("ptImg").innerHTML="";
   const nb=document.getElementById("ptNext");
   nb.classList.add("hidden"); nb.onclick=ptNext;
   const keys=["A","B","C","D"];
-  const others=PRETRIP.filter((_,idx)=>idx!==pt.i);
-  const opts=shuffleArr([step.title, ...shuffleArr(others).slice(0,3).map(s=>s.title)]);
+  // Distractors come from the same scope; pad from the full list if the section is tiny.
+  let pool=list.filter((_,idx)=>idx!==pt.i).map(s=>s.title);
+  if(pool.length<3) pool=pool.concat(shuffleArr(PRETRIP.filter(s=>!list.includes(s)).map(s=>s.title)));
+  const opts=shuffleArr([step.title, ...shuffleArr(pool).slice(0,3)]);
   const cc=document.getElementById("ptChoices"); cc.innerHTML="";
   opts.forEach((t,ci)=>{
     const b=document.createElement("button");
@@ -816,7 +892,7 @@ function renderPretrip(){
 }
 function answerPretrip(title, btn){
   const pt=cur.pt; if(pt.answered) return; pt.answered=true;
-  const step=PRETRIP[pt.i], correct = title===step.title;
+  const step=pt.list[pt.i], correct = title===step.title;
   document.querySelectorAll("#ptChoices .choice").forEach(b=>{
     b.disabled=true;
     if(b.dataset.title===step.title) b.classList.add("correct");
@@ -832,28 +908,124 @@ function answerPretrip(title, btn){
     imgs.map(f=>`<img src="${PT_IMG_DIR}${f}" alt="${step.title}" loading="lazy">`).join("");
   const nb=document.getElementById("ptNext");
   nb.classList.remove("hidden");
-  nb.textContent=(pt.i>=PRETRIP.length-1)?"See summary ›":"Next step ›";
+  nb.textContent=(pt.i>=pt.list.length-1)?"See summary ›":"Next step ›";
 }
 function ptNext(){
   const pt=cur.pt;
-  if(pt.i>=PRETRIP.length-1){ ptFinish(); return; }
+  if(pt.i>=pt.list.length-1){ ptFinish(); return; }
   pt.i++; renderPretrip(); window.scrollTo(0,0);
 }
 function ptFinish(){
-  const pt=cur.pt, pct=Math.round(pt.score/PRETRIP.length*100);
+  const pt=cur.pt, list=pt.list, pct=Math.round(pt.score/list.length*100);
   document.getElementById("ptCounter").textContent="Complete";
-  document.getElementById("ptPhase").textContent="Pre-trip walkthrough";
+  document.getElementById("ptPhase").textContent = pt.scope===null ? "Full walkthrough" : list[0].phase;
   document.getElementById("ptBar").style.width="100%";
   document.getElementById("ptDone").innerHTML="";
-  document.getElementById("ptQ").textContent=`Walkthrough complete — ${pt.score} of ${PRETRIP.length} correct (${pct}%).`;
+  document.getElementById("ptQ").textContent=`Complete — ${pt.score} of ${list.length} correct (${pct}%).`;
   document.getElementById("ptChoices").innerHTML="";
   document.getElementById("ptImg").innerHTML="";
   document.getElementById("ptExplain").innerHTML=
     `<div class="explain ${pct>=80?'':'bad'}">`+
-    PRETRIP.map((s,n)=>`${pt.done[n] && pt.done[n].ok?'✓':'✗'} ${n+1}. ${s.title}`).join("<br>")+
+    list.map((s,n)=>`${pt.done[n] && pt.done[n].ok?'✓':'✗'} ${n+1}. ${s.title}`).join("<br>")+
     `</div>`;
   const nb=document.getElementById("ptNext");
-  nb.classList.remove("hidden"); nb.textContent="🔄 Start over"; nb.onclick=startPretrip;
+  nb.classList.remove("hidden"); nb.textContent="🔄 Try again"; nb.onclick=()=>startPretrip(pt.scope);
+}
+
+/* ---------- Drag-to-order tile sequence game (per section) ---------- */
+function startPtOrder(scope){
+  const secs=pretripSections();
+  const steps=secs[scope].idxs.map((i,k)=>({...PRETRIP[i], ord:k}));  // ord = correct position
+  let order=shuffleArr(steps);
+  if(steps.length>1 && order.every((s,i)=>s.ord===i)) order=order.slice().reverse();  // avoid pre-solved
+  cur.pto={scope, steps, order};
+  go("ptorder");
+  document.getElementById("ptoTitle").textContent=secs[scope].phase;
+  document.getElementById("ptoScore").textContent=`${steps.length} tiles`;
+  document.getElementById("ptoHint").textContent="Drag the tiles (⠿) into the correct order — top = first — then Check.";
+  const chk=document.getElementById("ptoCheck");
+  chk.classList.remove("hidden"); chk.textContent="Check order";
+  document.getElementById("ptoRedo").classList.add("hidden");
+  renderPtOrder();
+}
+function renderPtOrder(){
+  const list=document.getElementById("ptOrderList");
+  list.innerHTML=cur.pto.order.map(s=>{
+    const f=s.img ? (Array.isArray(s.img)?s.img[0]:s.img) : null;
+    const thumb=f?`<img class="pt-thumb" src="${PT_IMG_DIR}${f}" alt="" loading="lazy">`:`<span class="pt-thumb pt-thumb-blank"></span>`;
+    return `<div class="pt-card" data-ord="${s.ord}">
+      <span class="pt-handle" aria-label="drag to reorder">⠿</span>
+      ${thumb}
+      <span class="pt-card-title">${s.title}</span>
+      <span class="pt-card-moves">
+        <button class="pt-move" onclick="movePtCard(this,-1)" aria-label="move up">↑</button>
+        <button class="pt-move" onclick="movePtCard(this,1)" aria-label="move down">↓</button>
+      </span>
+    </div>`;
+  }).join("");
+  makeSortable(list);
+}
+function movePtCard(btn,dir){
+  const card=btn.closest(".pt-card"), list=card.parentNode;
+  if(dir<0 && card.previousElementSibling) list.insertBefore(card, card.previousElementSibling);
+  if(dir>0 && card.nextElementSibling) list.insertBefore(card.nextElementSibling, card);
+  card.classList.remove("correct","wrong");
+}
+// Pointer-events sortable: works with mouse and touch. Drag starts from the ⠿ handle
+// so the list can still scroll on touch.
+function makeSortable(list){
+  let dragEl=null;
+  list.querySelectorAll(".pt-card").forEach(card=>{
+    const handle=card.querySelector(".pt-handle");
+    if(!handle) return;
+    handle.addEventListener("pointerdown", e=>{
+      e.preventDefault();
+      dragEl=card; card.classList.add("dragging");
+      try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    handle.addEventListener("pointermove", e=>{
+      if(!dragEl) return;
+      e.preventDefault();
+      const y=e.clientY;
+      const sibs=[...list.querySelectorAll(".pt-card:not(.dragging)")];
+      let next=null;
+      for(const s of sibs){ const r=s.getBoundingClientRect(); if(y < r.top + r.height/2){ next=s; break; } }
+      if(next) list.insertBefore(dragEl, next); else list.appendChild(dragEl);
+    });
+    const end=()=>{ if(dragEl){ dragEl.classList.remove("dragging","correct","wrong"); dragEl=null; } };
+    handle.addEventListener("pointerup", end);
+    handle.addEventListener("pointercancel", end);
+  });
+}
+function checkPtOrder(){
+  const cards=[...document.querySelectorAll("#ptOrderList .pt-card")];
+  let correct=0;
+  cards.forEach((c,i)=>{
+    const ok=Number(c.dataset.ord)===i;
+    c.classList.toggle("correct",ok); c.classList.toggle("wrong",!ok);
+    if(ok) correct++;
+  });
+  const total=cards.length, done=correct===total;
+  document.getElementById("ptoScore").textContent=`${correct}/${total} ✓`;
+  document.getElementById("ptoHint").textContent = done
+    ? "Perfect — that's the correct order! ✓"
+    : "Green tiles are in the right spot; move the red ones and check again.";
+  const redo=document.getElementById("ptoRedo");
+  redo.classList.remove("hidden");
+  if(done){ redo.textContent="⇅ Shuffle & try again"; redo.onclick=()=>startPtOrder(cur.pto.scope); }
+  else { redo.textContent="👁 Show correct order"; redo.onclick=showPtOrder; }
+}
+function showPtOrder(){
+  const list=document.getElementById("ptOrderList");
+  list.innerHTML=cur.pto.steps.map(s=>{
+    const f=s.img ? (Array.isArray(s.img)?s.img[0]:s.img) : null;
+    const thumb=f?`<img class="pt-thumb" src="${PT_IMG_DIR}${f}" alt="" loading="lazy">`:`<span class="pt-thumb pt-thumb-blank"></span>`;
+    return `<div class="pt-card correct">${thumb}<span class="pt-card-title">${s.ord+1}. ${s.title}</span></div>`;
+  }).join("");
+  document.getElementById("ptoHint").textContent="Here's the correct order — study it, then shuffle & try again.";
+  document.getElementById("ptoCheck").classList.add("hidden");
+  const redo=document.getElementById("ptoRedo");
+  redo.textContent="⇅ Shuffle & try again"; redo.onclick=()=>startPtOrder(cur.pto.scope);
 }
 
 /* ============================================================
