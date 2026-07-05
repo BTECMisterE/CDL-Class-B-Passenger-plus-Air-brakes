@@ -289,7 +289,72 @@ const QUESTION_BANK = {
       { q: "When driving through a work zone you should:",
         choices: ["Hold your highway speed", "Slow down, increase following distance, and watch for workers and sudden stops", "Pass other vehicles quickly", "Drive on the shoulder"],
         answer: 1,
-        why: "Work zones bring narrow lanes, workers, and abrupt stops — slow down, leave extra space, and stay alert; fines are often doubled." }
+        why: "Work zones bring narrow lanes, workers, and abrupt stops — slow down, leave extra space, and stay alert; fines are often doubled." },
+
+      { q: "Counter-steering is:",
+        choices: ["Turning the wheel counter-clockwise", "Turning the wheel back the other way after you steer to avoid an emergency", "Using the steering-axle brakes", "Steering opposite to what other drivers expect"],
+        answer: 1,
+        why: "After a quick steer to miss a hazard, you must immediately counter-steer (turn back the other way) or the vehicle will keep turning and can skid or roll." },
+
+      { q: "At highway speed, to avoid a crash it is usually best to:",
+        choices: ["Always brake as hard as possible", "Steer to miss the hazard, because you can turn to avoid an obstacle in less distance than you can stop", "Speed up and drive around it", "Close your eyes and hope"],
+        answer: 1,
+        why: "Stopping is not always best — at highway speed you can almost always turn to miss an obstacle faster than you can stop. Keep both hands on the wheel and don't over-steer." },
+
+      { q: "Most skids happen because the driver:",
+        choices: ["Used the parking brake", "Was going too fast for the road conditions", "Checked the mirrors too often", "Had new tires"],
+        answer: 1,
+        why: "Over-braking, over-steering, and over-acceleration all come back to driving too fast for conditions — the leading cause of skids." },
+
+      { q: "When you must back a large vehicle and cannot avoid it, you should:",
+        choices: ["Back toward the right (blind) side", "Back toward the driver's side and use a helper/lookout whenever possible", "Back quickly to get it over with", "Rely only on the mirrors and back fast"],
+        answer: 1,
+        why: "Back slowly toward the driver's side so you can see, and use a helper who stays where you can see them; get out and look (G.O.A.L.) before and during backing." },
+
+      { q: "You should hold the steering wheel:",
+        choices: ["With one hand at the bottom", "Firmly with both hands, on opposite sides of the wheel", "With your fingertips", "Only when turning"],
+        answer: 1,
+        why: "Keep both hands firmly on opposite sides of the wheel so a blowout or a pothole can't jerk the wheel out of your hands." },
+
+      { q: "At night you should drive so that you can:",
+        choices: ["Go as fast as traffic allows", "Stop within the distance you can see ahead with your headlights", "Rely on other vehicles' lights", "Use high beams at all times"],
+        answer: 1,
+        why: "Don't 'overdrive' your headlights — if you can't stop within the distance lit by your low beams, you are going too fast for night conditions." },
+
+      { q: "If your pre-trip or en-route inspection finds a safety defect, you should:",
+        choices: ["Note it and keep driving", "Have it repaired before driving — the law forbids operating an unsafe vehicle", "Only fix it at the end of the day", "Report it next week"],
+        answer: 1,
+        why: "You may not drive a vehicle with a condition that could cause an accident or breakdown; get it fixed first. Federal and state law require it." },
+
+      { q: "How often should you check your mirrors while driving?",
+        choices: ["Only when changing lanes", "Regularly — about every 5 to 8 seconds — and before any lane change, turn, or merge", "Once every few minutes", "Only when you hear a noise"],
+        answer: 1,
+        why: "Scan the mirrors regularly (roughly every 5–8 seconds) to keep track of traffic, your tires, and your cargo, and always before changing lanes or turning." },
+
+      { q: "The best way to know you are too tired to keep driving safely is to:",
+        choices: ["Drink coffee and push on", "Recognize the warning signs (heavy eyes, drifting, missed exits) and stop to sleep — only sleep cures fatigue", "Turn up the radio and open a window", "Speed up to finish sooner"],
+        answer: 1,
+        why: "Coffee, cold air, and loud music are not cures for fatigue — only real sleep is. Get off the road and rest when you notice the warning signs." },
+
+      { q: "Which of these vehicles must always stop at a railroad crossing (even when no train is coming)?",
+        choices: ["All commercial vehicles", "Buses carrying passengers and vehicles carrying placarded hazardous materials", "Only empty trucks", "Only cars"],
+        answer: 1,
+        why: "Buses with passengers and placarded hazmat vehicles must stop 15–50 ft before the tracks, look and listen, then cross without shifting gears." },
+
+      { q: "Before you cross or enter traffic, you must be sure the gap is large enough to:",
+        choices: ["Fit just your front bumper", "Get your whole vehicle across and up to speed, since a heavy vehicle accelerates slowly", "Squeeze in and speed up later", "Make the other driver brake"],
+        answer: 1,
+        why: "Loaded trucks and buses accelerate slowly and may need a much larger gap than a car — make sure you can fully clear and reach traffic speed." },
+
+      { q: "Empty overhead-clearance signs at bridges and underpasses:",
+        choices: ["Are always exactly correct", "May be wrong — repaving or snow can reduce the real clearance, so leave a margin", "Only matter for buses", "Can be ignored if you go slowly"],
+        answer: 1,
+        why: "Posted clearances aren't guaranteed — added pavement or packed snow lowers them. If you doubt you'll fit, go slow and find another route." },
+
+      { q: "You should signal your intention to turn:",
+        choices: ["Only after you start the turn", "Early and continuously — keep signaling through the turn, then make sure it cancels", "Just once, quickly", "Only if other cars are near"],
+        answer: 1,
+        why: "Signal well before the turn, keep the signal on all the way through, and check that it turns off afterward so you don't mislead others." }
     ]
   },
 
@@ -480,7 +545,37 @@ const QUESTION_BANK = {
       { q: "You should NOT apply the parking (spring) brakes when:",
         choices: ["Parking on a hill", "The brakes are very hot from hard use, or are wet in freezing temperatures", "Leaving the vehicle unattended", "The engine is off"],
         answer: 1,
-        why: "Don't set spring brakes if the brakes are very hot (they can be damaged) or wet in freezing weather (they can freeze) — let them cool or dry first." }
+        why: "Don't set spring brakes if the brakes are very hot (they can be damaged) or wet in freezing weather (they can freeze) — let them cool or dry first." },
+
+      { q: "The parking-brake control in the cab is usually a:",
+        choices: ["Round blue button", "Yellow, diamond-shaped knob you pull out to apply and push in to release", "Red eight-sided knob", "Foot pedal on the left"],
+        answer: 1,
+        why: "The yellow diamond-shaped knob controls the parking (spring) brakes — pull it OUT to set them, push it IN to release." },
+
+      { q: "The normal operating air-pressure range for most air-brake systems is about:",
+        choices: ["20 to 45 psi", "50 to 90 psi", "100 to 125 psi", "150 to 200 psi"],
+        answer: 2,
+        why: "The governor keeps tank pressure in the roughly 100–125 psi range, cutting the compressor in near 100 and out near 125." },
+
+      { q: "In the static air-leakage test (engine off, brakes released), a single vehicle's air loss should be no more than:",
+        choices: ["2 psi in one minute", "5 psi in one minute", "10 psi in one minute", "Any amount is fine"],
+        answer: 0,
+        why: "With the engine off and brakes released, loss must be under 2 psi/min for a single vehicle (3 for a combination); with the brakes applied, under 3 psi/min single (4 combination)." },
+
+      { q: "Before you leave an air-braked vehicle parked, you should:",
+        choices: ["Leave it in gear only", "Chock the wheels if needed and be sure the parking brakes are set — never rely on air pressure alone to hold it", "Leave the engine running", "Release the parking brake so the tanks don't leak"],
+        answer: 1,
+        why: "Set the parking (spring) brakes and chock the wheels on a grade. Don't leave a vehicle held only by service-brake air pressure — a leak could let it roll." },
+
+      { q: "If the service brakes fail, the spring brakes on many vehicles can still be applied gradually using the:",
+        choices: ["Trailer hand valve", "Modulating (control) valve that lets you apply the spring brakes in a controlled way", "Throttle", "Alcohol evaporator"],
+        answer: 1,
+        why: "Some vehicles have a modulating control valve so you can apply the spring (emergency) brakes gradually for a controlled stop if the service brakes fail." },
+
+      { q: "The dual air-pressure gauge (two needles or two gauges) is important because it lets you:",
+        choices: ["See the oil pressure", "Watch both the primary and secondary air systems separately", "Check tire pressure", "Measure engine temperature"],
+        answer: 1,
+        why: "A dual air system has two separate circuits; the dual gauge shows each one so you can tell if either the primary or secondary system is losing pressure." }
     ]
   },
 
@@ -671,7 +766,32 @@ const QUESTION_BANK = {
       { q: "Approaching a curve or turn, a bus driver should:",
         choices: ["Hold highway speed", "Slow down before the curve so passengers aren't thrown and the bus doesn't lean dangerously", "Brake hard mid-curve", "Accelerate through it"],
         answer: 1,
-        why: "Slow before the curve — braking or speeding in a curve can throw passengers and raises rollover risk on a tall bus." }
+        why: "Slow before the curve — braking or speeding in a curve can throw passengers and raises rollover risk on a tall bus." },
+
+      { q: "Because a bus is long, when you turn the rear wheels 'off-track' — this means you must:",
+        choices: ["Turn as sharply as possible", "Allow for the rear wheels following a tighter path than the front, so start the turn wide enough to keep the rear off curbs and other vehicles", "Ignore the rear of the bus", "Turn only from the far lane"],
+        answer: 1,
+        why: "The rear wheels follow a shorter (tighter) path than the front — off-tracking. Turn wide enough that the rear doesn't ride over the curb or into a vehicle beside you." },
+
+      { q: "Standing passengers must stay:",
+        choices: ["Anywhere in the aisle", "Behind the standee line (or the posted point) so no one stands ahead of the rear of the driver's seat", "Next to the driver", "In the stairwell"],
+        answer: 1,
+        why: "No passenger may stand forward of the standee line — the line marks the point ahead of which riders block your view and are unsafe in a stop." },
+
+      { q: "If your bus is equipped with roof emergency exits (hatches), while driving you should:",
+        choices: ["Always keep them wide open", "Keep them properly closed/latched unless the manufacturer permits venting, and know they are exits in an emergency", "Remove them", "Block them with baggage"],
+        answer: 1,
+        why: "Emergency roof hatches must work and stay secured in normal driving; passengers and crew must be able to use them to get out if the bus rolls or the doors jam." },
+
+      { q: "Before pulling away from every stop, a bus driver should:",
+        choices: ["Honk the horn", "Check mirrors and the interior for passengers still boarding, alighting, or near the doors", "Rev the engine", "Announce the next state"],
+        answer: 1,
+        why: "Most loading/unloading injuries happen at the door — check mirrors and the aisle so no one is caught in a closing door or struck as you pull out." },
+
+      { q: "To keep passengers comfortable and safe, a bus driver should:",
+        choices: ["Brake and accelerate hard to save time", "Drive smoothly — brake, accelerate, and steer gently so standing riders aren't thrown", "Take curves fast", "Change lanes often"],
+        answer: 1,
+        why: "Smooth, gradual braking, acceleration, and steering protect standing and seated passengers, especially the elderly or those with disabilities." }
     ]
   }
 };
