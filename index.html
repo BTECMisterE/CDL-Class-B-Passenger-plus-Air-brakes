@@ -108,6 +108,12 @@
   .pt-done{margin-bottom:14px}
   .pt-done-row{font-size:13px; color:var(--muted); padding:2px 0}
   .pt-done-row span{color:var(--text)}
+  .pt-img{display:flex; flex-wrap:wrap; gap:10px; margin:0 0 16px}
+  .pt-img img{
+    width:100%; max-width:360px; height:auto; border-radius:10px;
+    border:1px solid var(--line, rgba(255,255,255,.12)); background:var(--panel);
+    object-fit:cover;
+  }
 
   /* Flashcard */
   .flash{
@@ -334,6 +340,7 @@
     <div class="qtext" id="ptQ"></div>
     <div id="ptChoices"></div>
     <div id="ptExplain"></div>
+    <div id="ptImg" class="pt-img"></div>
     <button class="btn primary block hidden" id="ptNext" onclick="ptNext()">Next step ›</button>
   </section>
 
@@ -651,38 +658,125 @@ function showResult(){
    PRE-TRIP INSPECTION WALKTHROUGH
    An ordered "what's the next step?" drill. The SEQUENCE is fixed
    (that's what you're learning); only the 4 choices per step are
-   shuffled. Based on the AAMVA/FMCSA Seven-Step Inspection Method +
-   the standard in-cab air brake check. Always confirm the exact
-   order with your state handbook and examiner.
+   shuffled. Content is the full bus-specific pre-trip taken from the
+   2026 CDL Flashcards deck (Class B Passenger + Air Brakes school
+   bus). Each step's photo(s) live in pretrip/ and show after you
+   answer. Always confirm the exact order with your examiner.
    ============================================================ */
+const PT_IMG_DIR = "pretrip/";
 const PRETRIP = [
-  {phase:"1 · Vehicle Overview", title:"Review the last vehicle inspection report", detail:"Check whether the previous driver reported any problems, and that anything affecting safety was certified as repaired."},
-  {phase:"1 · Vehicle Overview", title:"Walk up and look the vehicle over", detail:"Note general condition — is it leaning, are there fresh fluid puddles underneath, any damage or hazards around it?"},
-  {phase:"2 · Engine Compartment (engine off)", title:"Check the engine oil level", detail:"Pull the dipstick — oil should read within the safe operating range."},
-  {phase:"2 · Engine Compartment (engine off)", title:"Check the coolant level", detail:"Coolant in the reservoir/radiator is at the proper level; hoses are not cracked or leaking."},
-  {phase:"2 · Engine Compartment (engine off)", title:"Check the power steering fluid", detail:"Level is adequate and the power-steering hose is sound."},
-  {phase:"2 · Engine Compartment (engine off)", title:"Check belts and hoses", detail:"Look for cracks, fraying, and proper tension (roughly ¾-inch play on a belt)."},
-  {phase:"2 · Engine Compartment (engine off)", title:"Check for leaks and worn wiring", detail:"Scan for drips, puddles, and cracked or chafed insulation before closing up."},
-  {phase:"3 · Start Engine & Inside the Cab", title:"Get in, start the engine, and listen", detail:"Start up and listen for unusual noises while you watch the gauges come alive."},
-  {phase:"3 · Start Engine & Inside the Cab", title:"Check the oil pressure gauge", detail:"Oil pressure should rise to the normal range within seconds of starting."},
-  {phase:"3 · Start Engine & Inside the Cab", title:"Check temperature, voltage, and air pressure gauges", detail:"Readings should climb to and hold in their normal operating ranges."},
-  {phase:"3 · Start Engine & Inside the Cab", title:"Confirm the warning lights go out", detail:"Oil, coolant, ABS, and low-air warning lights should turn off once everything is up to pressure/charge."},
-  {phase:"3 · Start Engine & Inside the Cab", title:"Check mirrors and windshield", detail:"Clean and properly adjusted, no illegal stickers, no damage that blocks your view."},
-  {phase:"3 · Start Engine & Inside the Cab", title:"Check emergency equipment", detail:"Charged fire extinguisher, spare electrical fuses, and warning triangles/reflectors are present."},
-  {phase:"4 · Turn Off Engine & Check Lights", title:"Shut the engine off and check the exterior lights", detail:"Headlights (low and high beam) and the 4-way flashers all work."},
-  {phase:"5 · Walkaround Inspection", title:"Turn on the right turn signal and begin the walkaround", detail:"Start a full loop of the vehicle, checking each area as you go."},
-  {phase:"5 · Walkaround Inspection", title:"Check the wheels and tires", detail:"Proper inflation and tread, no cuts or bulges, lug nuts tight, no oil/grease on the tires."},
-  {phase:"5 · Walkaround Inspection", title:"Check the suspension", detail:"Springs, hangers, shackles, U-bolts, shock absorbers, and air-ride bags are sound."},
-  {phase:"5 · Walkaround Inspection", title:"Check the brakes", detail:"Brake drums/discs, hoses, and slack adjusters; linings are not worn dangerously thin."},
-  {phase:"5 · Walkaround Inspection", title:"Check lights and reflectors on every side", detail:"All clean, the correct color, and working as you complete the loop."},
-  {phase:"6 · Passenger Items (bus)", title:"Check the emergency exits and entrance door", detail:"Emergency exits open and are unobstructed; the entrance door operates properly."},
-  {phase:"6 · Passenger Items (bus)", title:"Check the passenger area", detail:"Seats are secure, aisles and handrails clear and solid, no loose items that could fly around."},
-  {phase:"7 · Air Brake Check", title:"Build air pressure to the governor cut-out", detail:"Run the engine until the governor cuts out, normally around 120–140 psi."},
-  {phase:"7 · Air Brake Check", title:"Test the static air leakage rate", detail:"Fully charged, engine off, release the service brake: a straight vehicle should lose no more than 2 psi in one minute (3 psi with the brake applied)."},
-  {phase:"7 · Air Brake Check", title:"Test the low-air warning", detail:"With the key on, fan the brakes — the low-air warning must come on before pressure falls below 60 psi."},
-  {phase:"7 · Air Brake Check", title:"Confirm the spring (parking) brakes engage", detail:"Keep fanning: the parking-brake valve should pop out and the spring brakes apply, usually between about 20 and 45 psi."},
-  {phase:"7 · Air Brake Check", title:"Test the parking brake holds", detail:"Buckle up, build pressure back up, set the parking brake, and gently pull forward to confirm it holds."},
-  {phase:"7 · Air Brake Check", title:"Test the service brake", detail:"Roll at about 5 mph, apply the brake firmly — the vehicle should stop straight without pulling or feeling odd."},
+  {phase:"1 · Approach & Exterior", title:"Chock the rear wheels", detail:"Place wheel chocks around the back wheels before you begin.", img:"image4.jpg"},
+  {phase:"1 · Approach & Exterior", title:"Check for lean / suspension", detail:"Look at the bus front-to-back and side-to-side; it should not be leaning (a sign of suspension issues). Make sure nothing is leaning on or around the bus.", img:["image7.jpg","image11.jpg"]},
+  {phase:"1 · Approach & Exterior", title:"Sticker, plate & school-children sign", detail:"Inspection sticker is up to date, the license plate is mounted securely, and the 'Carrying School Children' sign up top is in good shape and not peeling.", img:"image11.jpg"},
+  {phase:"1 · Approach & Exterior", title:"Mirrors", detail:"All mirrors are mounted securely, clear, free of cracks, and the frames are not bent or broken.", img:["image13.jpg","image10.jpg"]},
+  {phase:"1 · Approach & Exterior", title:"Front lenses & clearance lights", detail:"Front lens covers are clean and not broken or cracked, and the upper clearance lights at the top of the bus are in good shape.", img:"image6.jpg"},
+
+  {phase:"2 · Engine Compartment", title:"Open the hood", detail:"Open the hood of the bus to begin the engine-compartment checks.", img:"image5.jpg"},
+  {phase:"2 · Engine Compartment", title:"Engine coolant level", detail:"Engine coolant is between the minimum and maximum marks.", img:"image2.jpg"},
+  {phase:"2 · Engine Compartment", title:"Engine oil", detail:"Check the engine oil on the left-hand side of the air-brake bus. Pull the dipstick, confirm it reads in the safe range, and explain how you check it.", img:"image24.jpg"},
+  {phase:"2 · Engine Compartment", title:"Transmission fluid", detail:"Transmission fluid is also on the left-hand side. Check it with the engine running at normal operating temperature, and explain how you read the dipstick.", img:"image24.jpg"},
+  {phase:"2 · Engine Compartment", title:"Power steering fluid & box", detail:"Power steering fluid is between the minimum and maximum level, and the power-steering box is mounted securely in the frame."},
+  {phase:"2 · Engine Compartment", title:"Upper brake lines", detail:"Upper brake lines are not leaking (listen for hissing), have no cracks, and all fittings are secure.", img:"image26.jpg"},
+  {phase:"2 · Engine Compartment", title:"Electrical panels", detail:"Everything is connected securely with no signs of arcing or damage.", img:["image28.jpg","image14.jpg"]},
+  {phase:"2 · Engine Compartment", title:"Fluid & air leaks", detail:"Do a general look around for any puddles or drips on the ground from the hoses, transmission, or engine."},
+
+  {phase:"3 · Steering Components", title:"Steering column", detail:"Steering column is tight, the universal joints are good, and it is not twisted.", img:"image3.jpg"},
+  {phase:"3 · Steering Components", title:"Power steering box", detail:"Power steering box is mounted securely, tight, with no visible leaks.", img:"image3.jpg"},
+  {phase:"3 · Steering Components", title:"Steering hoses & connections", detail:"Steering hoses and connections are secured and show no signs of cracks or steering-fluid leaks."},
+  {phase:"3 · Steering Components", title:"Pitman arm", detail:"Pitman arm nuts and bolts are all in place, tight, and secure, with the castle nuts and cotter pins secure as well.", img:"image3.jpg"},
+  {phase:"3 · Steering Components", title:"Drag link", detail:"Drag link is tight and secure with the nuts, bolts, castle nuts, and cotter pin all in place.", img:"image3.jpg"},
+  {phase:"3 · Steering Components", title:"Steering arm", detail:"Steering arm is tight and secure with the castle nuts, bolts, and cotter pin all in place.", img:"image17.jpg"},
+  {phase:"3 · Steering Components", title:"Tie rod", detail:"Tie rod is tight and secure with the bolts, castle nuts, and cotter pin all in place, with no loose joints.", img:"image1.jpg"},
+
+  {phase:"4 · Front Brakes & Air", title:"Brake lines & system", detail:"Brake lines are free from cracks and leaks and are mounted securely.", img:"image21.jpg"},
+  {phase:"4 · Front Brakes & Air", title:"Recall: 4 air-brake components", detail:"At each tire, name the four air-brake components: air can, clamp, slack adjuster, and push rod (part two of the brake system)."},
+  {phase:"4 · Front Brakes & Air", title:"Air can / canister", detail:"The air can (canister) is mounted securely.", img:"image17.jpg"},
+  {phase:"4 · Front Brakes & Air", title:"Air lines & ABS cable", detail:"Check the air lines and the ABS cable running to the front tires."},
+  {phase:"4 · Front Brakes & Air", title:"Clamp", detail:"The clamp is secure.", img:"image17.jpg"},
+  {phase:"4 · Front Brakes & Air", title:"Slack adjuster", detail:"The slack adjuster is secured with no more than 1 inch of play.", img:"image17.jpg"},
+  {phase:"4 · Front Brakes & Air", title:"Push rod", detail:"The push rod is not bent, with the pin and cotter pin in place.", img:"image17.jpg"},
+  {phase:"4 · Front Brakes & Air", title:"Recall: 3 brake-drum checks", detail:"Name the three items inspected on the brake drum (part three of the brake system): no bluing or cracking, no debris in the brake area, and at least 1/4 inch of material on the brake pad.", img:"image12.jpg"},
+  {phase:"4 · Front Brakes & Air", title:"Brake drum: no bluing or cracking", detail:"The brake drum shows no bluing (heat discoloration) or cracking.", img:"image12.jpg"},
+  {phase:"4 · Front Brakes & Air", title:"Brake drum: no debris", detail:"There is no debris in the brake area.", img:"image12.jpg"},
+  {phase:"4 · Front Brakes & Air", title:"Brake pad material", detail:"At least 1/4 inch of material remains on the brake pad.", img:"image12.jpg"},
+
+  {phase:"5 · Front Suspension & Tires", title:"Leaf springs", detail:"Leaf springs are in line and secured at both ends, with no missing pieces, cracks, or welds.", img:["image20.jpg","image25.jpg"]},
+  {phase:"5 · Front Suspension & Tires", title:"U-bolts", detail:"U-bolts are tight and secure with no cracks, and the nuts are tight on the bottom.", img:"image20.jpg"},
+  {phase:"5 · Front Suspension & Tires", title:"Shocks", detail:"Shocks are tight and secure, mounted at both ends with tight nuts and bolts, and not leaking.", img:"image30.jpg"},
+  {phase:"5 · Front Suspension & Tires", title:"Tire tread", detail:"At least 4/32 inch of tread with no uneven wear. No re-tread or metal threads visible, and nothing sticking out of the tire.", img:"image19.jpg"},
+  {phase:"5 · Front Suspension & Tires", title:"Tire sidewall", detail:"Sidewalls show no cracks, bubbles, or dry rot."},
+  {phase:"5 · Front Suspension & Tires", title:"Tire pressure", detail:"Cap and valve stem are not damaged. Remove the cap, use a pressure gauge, and confirm approximately 115 PSI."},
+  {phase:"5 · Front Suspension & Tires", title:"Rims & wheel hub", detail:"Rims are not bent, damaged, or cracked. The wheel hub is tight and secure with no leaks."},
+  {phase:"5 · Front Suspension & Tires", title:"Lug nuts & studs", detail:"All lug nuts are present and tight with no signs of rust. Studs and bolts show no signs of elongation."},
+
+  {phase:"6 · Entering the Bus", title:"Move to the entrance door", detail:"Head to the entry door to begin the entry checks.", img:"image23.jpg"},
+  {phase:"6 · Entering the Bus", title:"Door glass, seals & release", detail:"Door glass and seals are in good working order and the door catches and releases properly.", img:"image31.jpg"},
+  {phase:"6 · Entering the Bus", title:"Steps, handrail & step light", detail:"Steps are clear and in good condition, the handrail is secure, and the step light is not broken or cracked.", img:"image29.jpg"},
+  {phase:"6 · Entering the Bus", title:"Logbook, registration & insurance", detail:"Check the logbook so the registration matches the bus plates. State there is no physical insurance card because the bus is insured through the state, and confirm no issues were found on the previous trip.", img:"image35.jpg"},
+
+  {phase:"7 · Emergency Equipment", title:"Recall: 6 emergency items", detail:"Name the six pieces of emergency equipment: wheel chocks, sealed first aid kit, bodily-spill cleanup kit, reflective triangles, a minimum of 6 spare fuses, and a fully charged fire extinguisher with the pin in place and securely mounted."},
+  {phase:"7 · Emergency Equipment", title:"Wheel chocks", detail:"Wheel chocks are present.", img:"image4.jpg"},
+  {phase:"7 · Emergency Equipment", title:"Reflective triangles", detail:"Three reflective triangles are present.", img:"image32.jpg"},
+  {phase:"7 · Emergency Equipment", title:"Fire extinguisher", detail:"Fire extinguisher is mounted securely, fully charged, with the pin in place.", img:"image41.jpg"},
+  {phase:"7 · Emergency Equipment", title:"Spare fuses", detail:"At least 6 spare fuses are present.", img:"image58.jpg"},
+  {phase:"7 · Emergency Equipment", title:"First aid & spill kit", detail:"First aid kit and spill-cleanup kit are present with the seals in place.", img:"image22.jpg"},
+
+  {phase:"8 · In-Cab Brake Check", title:"Seat belt & close door", detail:"Take a seat. Check the seat belt for cuts, tears, or frays, then close the door.", img:"image37.jpg"},
+  {phase:"8 · In-Cab Brake Check", title:"Rear wheels stay chocked", detail:"For the brake checks the rear wheels STAY CHOCKED. Keep your feet planted on the floor and do not touch the brakes yet."},
+  {phase:"8 · In-Cab Brake Check", title:"Accessory mode: dash lights, ABS, DPF", detail:"Turn the key to accessory mode. The ABS, DPF (diesel particulate filter), and check-engine diagnostic lights turn on and off, confirming systems are operating; the check-engine light stays on a little longer than the others.", img:"image33.jpg"},
+  {phase:"8 · In-Cab Brake Check", title:"Check brake PSI / pump to 90", detail:"Check brake PSI. Push and release the parking (e-)brake and pump the brake down slowly until 90 PSI.", img:"image27.jpg"},
+  {phase:"8 · In-Cab Brake Check", title:"Build pressure & listen for cut-off", detail:"Pull the e-brake on, turn the engine on, and build pressure to 120 PSI. Listen for the cut-off/bypass (governor) valve at 120 to 140 PSI by revving to about 1500 RPM."},
+  {phase:"8 · In-Cab Brake Check", title:"Engine off, back to accessory", detail:"Turn the engine off and return to accessory mode, then push the e-brake off."},
+  {phase:"8 · In-Cab Brake Check", title:"Let gauges settle", detail:"Let the gauges settle and read the gauge to the inspector."},
+  {phase:"8 · In-Cab Brake Check", title:"Static leak test (1 minute)", detail:"Push and hold the brake pedal down for one minute; pressure loss must be no more than 3 PSI (using your phone or watch is OK). Tell the inspector the starting and ending pressure BEFORE taking your foot off the brake."},
+  {phase:"8 · In-Cab Brake Check", title:"Low-air alarm before 55 PSI", detail:"Pump down slowly and confirm the low-air alarm goes off before 55 PSI; read the value aloud when the alarm sounds."},
+  {phase:"8 · In-Cab Brake Check", title:"Spring brake pops out (20-45)", detail:"Continue pumping down. The e-brake should pop out between 20 and 45 PSI. If it pops below 20 PSI the bus cannot be driven and is out of service."},
+  {phase:"8 · In-Cab Brake Check", title:"Read the pop-out value", detail:"Read the value at which the e-brake pops out."},
+  {phase:"8 · In-Cab Brake Check", title:"Rebuild & confirm alarms", detail:"Turn the bus back on and throttle up to about 1500 RPM. State the low-air alarm is off by 60 to 65 PSI and the cut-off/bypass valve sounds at 120 to 140 PSI."},
+  {phase:"8 · In-Cab Brake Check", title:"Engine off, get chocks", detail:"Turn the engine off and get the wheel chocks."},
+  {phase:"8 · In-Cab Brake Check", title:"Re-enter & restart", detail:"Re-enter the bus, close the door, put the seat belt on, and start the bus."},
+  {phase:"8 · In-Cab Brake Check", title:"E-brake / range inhibiter check", detail:"State you will check the e-brake by putting the bus in drive and revving to about 1000 RPM. This bus has a range inhibiter, so it cannot go into gear without your foot on the brake. Step on the brake, check for no range-inhibiter light, and perform the e-brake check."},
+  {phase:"8 · In-Cab Brake Check", title:"Service brake test at 5 mph", detail:"Release the e-brake, check the mirrors, and move the bus forward to about 5 MPH to test the service brakes: a smooth stop with no pulling left or right."},
+  {phase:"8 · In-Cab Brake Check", title:"Set e-brake & finish footsweep", detail:"Set the e-brake and finish the footsweep of the brake and throttle."},
+
+  {phase:"9 · Dash & Signals", title:"Recall: 8 signaling features", detail:"Cover the eight signaling features: hazard indicators, left signal, right signal, wipers/washer fluid, high/low beams, horn, and steering-wheel play under 5 degrees. Set high beams and hazards ON before continuing.", img:"image38.jpg"},
+  {phase:"9 · Dash & Signals", title:"Heater controls & door", detail:"Go through all heater controls and confirm the door opens and closes.", img:"image40.jpg"},
+  {phase:"9 · Dash & Signals", title:"Dash gauges", detail:"Go through all gauges on the dash.", img:"image50.jpg"},
+  {phase:"9 · Dash & Signals", title:"Mounted items & windshield", detail:"Confirm these are mounted securely: camera (secure and not in the line of sight), rear-view/passenger mirror, tinted visor, and seat-belt cutter. Check the windshield for damage.", img:"image34.jpg"},
+  {phase:"9 · Dash & Signals", title:"Driver window & mirrors", detail:"Driver-side window is free of cracks and slides properly. Mirrors are clean and adjusted properly (go through all of them)."},
+  {phase:"9 · Dash & Signals", title:"West-coast & convex mirrors", detail:"West-coast mirror on top, convex (bird's-eye) mirror on the bottom. Do both sides, left and right, west-coast and convex.", img:["image36.jpg","image52.jpg"]},
+
+  {phase:"10 · Passenger Compartment", title:"Enter passenger compartment", detail:"Move into the passenger compartment for the interior checks."},
+  {phase:"10 · Passenger Compartment", title:"Passenger seats", detail:"No broken seat frames; seats are attached to the floor, cushions attached to the frames, and seat belts in place.", img:"image51.jpg"},
+  {phase:"10 · Passenger Compartment", title:"Bus floor", detail:"Bus floor has no holes, cracks, breaks, or trip hazards."},
+  {phase:"10 · Passenger Compartment", title:"Side emergency exits & hatches", detail:"Check all side emergency exits (there are 4): each is labeled, buzzes when opened, and latches securely. Windows are undamaged with window stops present. Check top hatches (alarm when opened, latch securely) and the rear emergency door with your non-dominant hand, checking rear hazards while it is open.", img:"image44.jpg"},
+  {phase:"10 · Passenger Compartment", title:"Rear emergency door", detail:"Rear emergency door is labeled, alarms when opened, and latches back securely.", img:["image49.jpg","image46.jpg"]},
+
+  {phase:"11 · Lights Walkaround", title:"Take keys, re-chock rear wheels", detail:"Take the keys out and put the wheel chocks back around the rear wheels.", img:"image62.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Front: hazards & high beams", detail:"At the front, check the hazard lights and high beams work, light covers are clean and undamaged, and amber clearance lights work. Go in, start the bus, switch to low beam and RIGHT blinker, then turn the bus off and take the keys with you."},
+  {phase:"11 · Lights Walkaround", title:"Right side: blinker, markers, reflectors", detail:"On the right (passenger) side, confirm the right blinker works, then move down the side: amber side blinker works; two amber and one red marker light work; two amber and one red reflector are screwed in well and undamaged."},
+  {phase:"11 · Lights Walkaround", title:"Right side: emergency windows & DEF", detail:"Emergency windows are clearly marked with reflective tape around each perimeter. The DEF door/cap is tight and secure, the tank is mounted securely, and there are no leaks.", img:["image53.jpg","image56.jpg"]},
+  {phase:"11 · Lights Walkaround", title:"Recall: FEH", detail:"FEH = Frame, Exhaust, Holes.", img:"image47.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Frame", detail:"Frame is tight and secure with no cracks or bends.", img:"image47.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Exhaust", detail:"Exhaust is mounted securely with no leaks or holes.", img:"image47.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Holes", detail:"No holes in the floor.", img:"image47.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Fuel", detail:"Fuel cap and tank are mounted securely with no leaks (still on the right side).", img:"image54.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Recall: 3 dually/rear-tire checks", detail:"Name the three things to mention about the dually (rear) tires, the same for both sides: at least 2/32 inch tread with nothing sticking out and no uneven wear; nothing stuck between the duals; same size and type."},
+  {phase:"11 · Lights Walkaround", title:"Dually tread", detail:"At least 2/32 inch of tread with nothing sticking out of the tires and no uneven wear.", img:"image63.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Nothing between the duals", detail:"Nothing is stuck in the middle between the dual tires.", img:"image45.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Same size & type", detail:"The dual tires are the same size and type.", img:"image45.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Move to the back of the bus", detail:"Head to the rear of the bus.", img:"image59.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Rear checks", detail:"Right amber blinker works. Check the rear exit door (prop works and releases well), the 'Carrying School Children' sign, back red clearance lights (working, undamaged), the emergency-exit sign and reflective tape, exhaust (no dents or damage), and reflectors and light covers (free from damage).", img:"image55.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Explain checking rear lights", detail:"Explain how you would check the rear lights, and ask the inspector whether to do that now or move on.", img:"image59.jpg"},
+  {phase:"11 · Lights Walkaround", title:"Left side markers & reflectors", detail:"Same as the right side: two amber and one red marker light work and show no damage; two amber and one red reflectors are screwed in well and undamaged; emergency exits are marked with perimeter reflective tape.", img:"image64.jpg"},
+
+  {phase:"12 · Left Side & Ready", title:"Recall: 3 left-side air parts", detail:"On the left side, name the three air-brake parts to talk about: air dryer, air tanks, and the release valve."},
+  {phase:"12 · Left Side & Ready", title:"Air dryer", detail:"Air dryer is mounted securely.", img:"image57.jpg"},
+  {phase:"12 · Left Side & Ready", title:"Air tanks", detail:"Air tanks are mounted securely with no signs of leaks.", img:"image66.jpg"},
+  {phase:"12 · Left Side & Ready", title:"Release valve (moisture)", detail:"Operate the release valve to confirm there is no moisture in the system.", img:"image67.jpg"},
+  {phase:"12 · Left Side & Ready", title:"Battery box", detail:"Battery box is secure, connections are tight, no corrosion, cables not cracked and secure, and the door closes.", img:"image65.jpg"},
+  {phase:"12 · Left Side & Ready", title:"Fuse box", detail:"Fuse box is all connected with no signs of nesting, damage, or arcing.", img:"image61.jpg"},
+  {phase:"12 · Left Side & Ready", title:"Left blinker check & ready to drive", detail:"Switch to the left blinker: check the front-left and back-left blinkers, grab the wheel chocks, and let the inspector know the bus is ready to drive and move into maneuvers."},
 ];
 function startPretrip(){
   cur.pt={i:0, score:0, answered:false, done:[]};
@@ -705,6 +799,7 @@ function renderPretrip(){
     ? "You're starting your pre-trip inspection. What do you do FIRST?"
     : `Done: “${PRETRIP[pt.i-1].title}.” What's the next step?`;
   document.getElementById("ptExplain").innerHTML="";
+  document.getElementById("ptImg").innerHTML="";
   const nb=document.getElementById("ptNext");
   nb.classList.add("hidden"); nb.onclick=ptNext;
   const keys=["A","B","C","D"];
@@ -732,6 +827,9 @@ function answerPretrip(title, btn){
   document.getElementById("ptScore").textContent=`${pt.score} ✓`;
   document.getElementById("ptExplain").innerHTML=
     `<div class="explain ${correct?'':'bad'}"><b>${correct?'Correct ✓':'Not quite — the next step is: '+step.title}</b><br>${step.detail}</div>`;
+  const imgs=step.img ? (Array.isArray(step.img)?step.img:[step.img]) : [];
+  document.getElementById("ptImg").innerHTML=
+    imgs.map(f=>`<img src="${PT_IMG_DIR}${f}" alt="${step.title}" loading="lazy">`).join("");
   const nb=document.getElementById("ptNext");
   nb.classList.remove("hidden");
   nb.textContent=(pt.i>=PRETRIP.length-1)?"See summary ›":"Next step ›";
@@ -749,6 +847,7 @@ function ptFinish(){
   document.getElementById("ptDone").innerHTML="";
   document.getElementById("ptQ").textContent=`Walkthrough complete — ${pt.score} of ${PRETRIP.length} correct (${pct}%).`;
   document.getElementById("ptChoices").innerHTML="";
+  document.getElementById("ptImg").innerHTML="";
   document.getElementById("ptExplain").innerHTML=
     `<div class="explain ${pct>=80?'':'bad'}">`+
     PRETRIP.map((s,n)=>`${pt.done[n] && pt.done[n].ok?'✓':'✗'} ${n+1}. ${s.title}`).join("<br>")+
